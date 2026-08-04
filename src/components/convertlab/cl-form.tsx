@@ -1,0 +1,233 @@
+"use client";
+
+import { useState, type ChangeEvent } from "react";
+import { motion } from "framer-motion";
+import {
+  ClipboardList,
+  CheckCircle2,
+  Send,
+  ArrowRight,
+  MessageCircleOff,
+} from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { catalogServices } from "@/data/catalog";
+
+const fields = [
+  {
+    name: "nome",
+    label: "Nome",
+    placeholder: "Seu nome",
+    type: "text",
+    full: true,
+  },
+  {
+    name: "empresa",
+    label: "Empresa",
+    placeholder: "Nome da empresa ou negócio",
+    type: "text",
+    full: true,
+  },
+  {
+    name: "instagram",
+    label: "Instagram",
+    placeholder: "@seudisparo",
+    type: "text",
+    full: true,
+  },
+  {
+    name: "objetivo",
+    label: "Objetivo",
+    placeholder: "O que você espera da sua página? Ex.: captar leads de venda de planos.",
+    type: "textarea",
+    full: true,
+  },
+  {
+    name: "servico",
+    label: "Serviço",
+    type: "select",
+    full: true,
+  },
+  {
+    name: "cor",
+    label: "Cor",
+    placeholder: "Cor(es) de referência da sua marca",
+    type: "text",
+    full: true,
+  },
+  {
+    name: "referencias",
+    label: "Referências",
+    placeholder: "Links de páginas que você gosta ou inspirações",
+    type: "textarea",
+    full: true,
+  },
+] as const;
+
+type FormState = Record<(typeof fields)[number]["name"], string>;
+
+const initial: FormState = {
+  nome: "",
+  empresa: "",
+  instagram: "",
+  objetivo: "",
+  servico: "",
+  cor: "",
+  referencias: "",
+};
+
+export function ClForm() {
+  const [data, setData] = useState<FormState>(initial);
+  const [submitted, setSubmitted] = useState(false);
+
+  const set = (key: keyof FormState) => (
+    e: ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => setData((d) => ({ ...d, [key]: e.target.value }));
+
+  const summary = fields
+    .filter((f) => data[f.name]?.trim())
+    .map((f) => ({ label: f.label, value: data[f.name].trim() }));
+
+  if (submitted) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="cl-card rounded-3xl p-8 sm:p-10"
+      >
+        <span className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white">
+          <CheckCircle2 className="h-7 w-7" aria-hidden="true" />
+        </span>
+        <h3 className="mt-6 text-2xl font-bold tracking-tight text-white">
+          Tudo organizado.
+        </h3>
+        <p className="mt-3 text-white/60">
+          Recebemos suas informações. Em instantes você terá isso em mãos e, na
+          sequência, o orçamento sob medida.
+        </p>
+
+        <div className="mt-7 space-y-3">
+          {summary.map((item) => (
+            <div
+              key={item.label}
+              className="rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3.5"
+            >
+              <p className="text-xs font-semibold uppercase tracking-wider text-cyan-300">
+                {item.label}
+              </p>
+              <p className="mt-1 text-sm text-white/85">{item.value}</p>
+            </div>
+          ))}
+          {summary.length === 0 ? (
+            <p className="text-sm text-white/50">Nenhum campo preenchido.</p>
+          ) : null}
+        </div>
+
+        <p className="mt-6 flex items-center gap-2 text-sm text-white/60">
+          <ArrowRight className="h-4 w-4 text-cyan-300" aria-hidden="true" />
+          Próximo passo: você recebe o orçamento. Sem cobrança antecipada.
+        </p>
+
+        <button
+          type="button"
+          onClick={() => {
+            setData(initial);
+            setSubmitted(false);
+          }}
+          className="mt-6 text-sm font-medium text-violet-300 transition-colors hover:text-violet-200"
+        >
+          Preencher novo briefing
+        </button>
+      </motion.div>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        setSubmitted(true);
+      }}
+      className="cl-card flex flex-col gap-5 rounded-3xl p-8 sm:p-10"
+    >
+      <div className="flex items-center gap-3">
+        <span className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-400 text-white">
+          <ClipboardList className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <div>
+          <h3 className="text-lg font-bold tracking-tight text-white">
+            Briefing rápido
+          </h3>
+          <p className="text-sm text-white/55">Leva menos de 5 minutos.</p>
+        </div>
+      </div>
+
+      {fields.map((field) => (
+        <div key={field.name} className="flex flex-col gap-2">
+          <label
+            htmlFor={field.name}
+            className="text-sm font-medium text-white/80"
+          >
+            {field.label}
+          </label>
+          {field.type === "textarea" ? (
+            <textarea
+              id={field.name}
+              name={field.name}
+              value={data[field.name]}
+              onChange={set(field.name)}
+              rows={3}
+              placeholder={field.placeholder}
+              className="w-full resize-none rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-white placeholder:text-white/35 outline-none transition-colors focus:border-cyan-400/60 focus:bg-white/[0.08]"
+            />
+          ) : field.type === "select" ? (
+            <select
+              id={field.name}
+              name={field.name}
+              value={data[field.name]}
+              onChange={set(field.name)}
+              className="w-full appearance-none rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-white outline-none transition-colors focus:border-cyan-400/60 focus:bg-white/[0.08]"
+            >
+              <option value="" disabled className="bg-[#14102a]">
+                Selecione o segmento
+              </option>
+              {catalogServices.map((s) => (
+                <option key={s} value={s} className="bg-[#14102a]">
+                  {s}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              id={field.name}
+              name={field.name}
+              type="text"
+              value={data[field.name]}
+              onChange={set(field.name)}
+              placeholder={field.placeholder}
+              className="w-full rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-white placeholder:text-white/35 outline-none transition-colors focus:border-cyan-400/60 focus:bg-white/[0.08]"
+            />
+          )}
+        </div>
+      ))}
+
+      <Button
+        type="submit"
+        size="lg"
+        className="mt-1 w-full gap-2 bg-violet-600 shadow-[0_18px_50px_-14px_rgba(124,58,237,0.9)] hover:bg-violet-700"
+      >
+        <Send className="h-5 w-5" aria-hidden="true" />
+        Enviar logo
+      </Button>
+
+      <p className="flex items-start gap-2 text-xs text-white/45">
+        <MessageCircleOff className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300/80" aria-hidden="true" />
+        Sem whatsapp, sem spam: você recebe tudo organizado e depois um
+        orçamento sob medida.
+      </p>
+    </form>
+  );
+}
