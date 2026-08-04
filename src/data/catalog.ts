@@ -55,6 +55,12 @@ export const projects: Project[] = [
   },
 ];
 
+export const convertlabContact = {
+  whatsappNumber: "5551991289103",
+  siteUrl: "https://convert-lab-sigma.vercel.app/",
+  email: "contato@convertlab.com.br",
+};
+
 export const catalogServices = [
   "Odontologia",
   "Advocacia",

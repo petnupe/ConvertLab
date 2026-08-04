@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { catalogServices } from "@/data/catalog";
+import { catalogServices, convertlabContact } from "@/data/catalog";
 
 const fields = [
   {
@@ -150,6 +150,20 @@ export function ClForm() {
       onSubmit={(e) => {
         e.preventDefault();
         setSubmitted(true);
+        const lines = [
+          "Novo briefing — ConvertLab",
+          "------------------------",
+          ...fields
+            .filter((f) => data[f.name]?.trim())
+            .map((f) => `${f.label}: ${data[f.name].trim()}`),
+        ].join("\n");
+        window.open(
+          `https://wa.me/${convertlabContact.whatsappNumber}?text=${encodeURIComponent(
+            lines,
+          )}`,
+          "_blank",
+          "noopener,noreferrer",
+        );
       }}
       className="cl-card flex flex-col gap-5 rounded-3xl p-8 sm:p-10"
     >

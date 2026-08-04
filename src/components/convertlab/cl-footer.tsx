@@ -2,6 +2,7 @@ import { MessageCircle, Mail, ArrowUpRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { InstagramIcon } from "@/components/ui/instagram-icon";
+import { convertlabContact } from "@/data/catalog";
 
 const nav = [
   { label: "Projetos", href: "#projetos" },
@@ -63,7 +64,7 @@ export function ClFooter() {
               <InstagramIcon className="h-5 w-5" />
             </a>
             <a
-              href="https://wa.me/5511999990000"
+              href={`https://wa.me/${convertlabContact.whatsappNumber}`}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="WhatsApp"
