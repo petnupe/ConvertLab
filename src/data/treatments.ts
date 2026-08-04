@@ -35,7 +35,7 @@ export const treatments: Treatment[] = [
     description:
       "Lâminas ultrafinas em porcelana que corrigem a cor e o formato dos dentes, com efeito natural e mínimo desgaste.",
     features: ["Efeito invisível", "Resultado personalizado", "Em poucas semanas"],
-    image: "https://images.unsplash.com/photo-1609840114035-815d4c134f66",
+    image: "https://images.unsplash.com/photo-1546519638-68e109498ffc",
     imageAlt: "Paciente sorrindo com facetas de porcelana",
   },
   {
@@ -55,7 +55,7 @@ export const treatments: Treatment[] = [
     description:
       "Alinhadores transparentes que reposicionam os dentes discretamente, devolvendo harmonia e função sem metais visíveis.",
     features: ["Alinhadores transparentes", "Menos consultas", "Conforto total"],
-    image: "https://images.unsplash.com/photo-1598256523186-8fe577ef8414",
+    image: "https://images.unsplash.com/photo-1606811971618-4486d14f3f99",
     imageAlt: "Alinhador dental transparente",
   },
   {

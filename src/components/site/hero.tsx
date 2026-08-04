@@ -127,7 +127,7 @@ export function Hero() {
             />
             <div className="relative overflow-hidden rounded-[2.5rem] border border-white/80 shadow-lift">
               <Image
-                src="https://images.unsplash.com/photo-1609840114035-815d4c134f66?auto=format&fit=crop&w=1200&q=80"
+                src="https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=1200&q=80"
                 alt="Paciente sorrindo com confiança após tratamento na Odonto Prime"
                 width={960}
                 height={1150}

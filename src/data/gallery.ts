@@ -11,7 +11,7 @@ export const gallery: GalleryItem[] = [
     case: "Caso 01 — Restauração estética",
     technique: "Facetas em porcelana",
     before: "https://images.unsplash.com/photo-1606811971618-4486d14f3f99",
-    after: "https://images.unsplash.com/photo-1609840114035-815d4c134f66",
+    after: "https://images.unsplash.com/photo-1546519638-68e109498ffc",
     description:
       "Correção de desgaste e manchas em seis elementos anteriores, com resultado natural e harmônico.",
   },
@@ -26,16 +26,16 @@ export const gallery: GalleryItem[] = [
   {
     case: "Caso 03 — Clareamento profissional",
     technique: "Clareamento a laser",
-    before: "https://images.unsplash.com/photo-1604848698030-c434ba08c3f7",
-    after: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f",
+    before: "https://images.unsplash.com/photo-1606811841689-23dfddce3e95",
+    after: "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5",
     description:
       "Três tons mais claro em uma única sessão, com protocolo de dessensibilização e conforto total.",
   },
   {
     case: "Caso 04 — Alinhamento invisível",
     technique: "Alinhadores transparentes",
-    before: "https://images.unsplash.com/photo-1609813563870-6c1d80a7a0e9",
-    after: "https://images.unsplash.com/photo-1589729327602-8b958a2e19c3",
+    before: "https://images.unsplash.com/photo-1606811971618-4486d14f3f99",
+    after: "https://images.unsplash.com/photo-1606811841689-23dfddce3e95",
     description:
       "Correção de apinhamento discreto em oito meses, sem bráquetes e sem mudar a rotina.",
   },

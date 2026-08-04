@@ -14,7 +14,7 @@ export const projects: Project[] = [
     tag: "Odontologia",
     blurb:
       "Clínica odontológica premium com agendamento por avaliação, depoimentos e planejamento digital de sorriso.",
-    image: "https://images.unsplash.com/photo-1609840114035-815d4c134f66",
+    image: "https://images.unsplash.com/photo-1546519638-68e109498ffc",
     imageAlt: "Paciente sorrindo após tratamento odontológico",
   },
   {
