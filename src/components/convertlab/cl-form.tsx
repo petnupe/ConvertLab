@@ -145,25 +145,37 @@ export function ClForm() {
     );
   }
 
+  const buildLines = (d: FormState) =>
+    [
+      "Novo briefing — ConvertLab",
+      "------------------------",
+      ...fields
+        .filter((f) => d[f.name]?.trim())
+        .map((f) => `${f.label}: ${d[f.name].trim()}`),
+    ].join("\n");
+
   return (
     <form
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
+        const lines = buildLines(data);
+        try {
+          const res = await fetch("/api/contact", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          });
+          if (!res.ok) throw new Error("api_error");
+        } catch {
+          window.open(
+            `https://wa.me/${convertlabContact.whatsappNumber}?text=${encodeURIComponent(
+              lines,
+            )}`,
+            "_blank",
+            "noopener,noreferrer",
+          );
+        }
         setSubmitted(true);
-        const lines = [
-          "Novo briefing — ConvertLab",
-          "------------------------",
-          ...fields
-            .filter((f) => data[f.name]?.trim())
-            .map((f) => `${f.label}: ${data[f.name].trim()}`),
-        ].join("\n");
-        window.open(
-          `https://wa.me/${convertlabContact.whatsappNumber}?text=${encodeURIComponent(
-            lines,
-          )}`,
-          "_blank",
-          "noopener,noreferrer",
-        );
       }}
       className="cl-card flex flex-col gap-5 rounded-3xl p-8 sm:p-10"
     >
