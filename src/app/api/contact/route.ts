@@ -3,7 +3,7 @@ import { Resend } from "resend";
 
 export const runtime = "nodejs";
 
-const FALLBACK_FROM = process.env.MAIL_FROM ?? "onboarding@resend.dev";
+const FALLBACK_FROM = process.env.MAIL_FROM ?? "contato@cuidadosmeus.com.br";
 const TO = process.env.MAIL_TO ?? "contato@cuidadosmeus.com.br";
 const FROM = `ConvertLab <${FALLBACK_FROM}>`;
 
