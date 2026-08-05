@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ConvertLab — Logo / Foto de perfil</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+    background: #060510;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    padding: 24px;
+  }
+
+  .frame {
+    width: 1080px;
+    height: 1080px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 48px;
+    background: #0a0812;
+    display: grid;
+    place-items: center;
+    isolation: isolate;
+  }
+
+  .frame::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(560px 480px at 20% 12%, rgba(124, 58, 237, 0.42), transparent 60%),
+      radial-gradient(520px 440px at 88% 10%, rgba(34, 211, 238, 0.22), transparent 58%),
+      radial-gradient(620px 540px at 80% 100%, rgba(124, 58, 237, 0.32), transparent 60%);
+  }
+
+  .grid {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1.5px, transparent 1.5px);
+    background-size: 34px 34px;
+    -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 25%, transparent 78%);
+    mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 25%, transparent 78%);
+  }
+
+  .tile {
+    width: 560px;
+    height: 560px;
+    border-radius: 160px;
+    background: linear-gradient(135deg, #7c3aed 0%, #a21caf 60%, #0891b2 100%);
+    display: grid;
+    place-items: center;
+    color: #fff;
+    box-shadow:
+      0 60px 140px -30px rgba(124, 58, 237, 0.95),
+      0 30px 70px -20px rgba(8, 145, 178, 0.6),
+      inset 0 4px 0 rgba(255, 255, 255, 0.22);
+  }
+
+  .tile svg {
+    width: 330px;
+    height: 330px;
+  }
+
+  .ring {
+    position: absolute;
+    width: 640px;
+    height: 640px;
+    border-radius: 50%;
+    border: 1.5px dashed rgba(255, 255, 255, 0.16);
+  }
+
+  .caption {
+    position: absolute;
+    bottom: 52px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    color: #9b95b8;
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+  }
+</style>
+</head>
+<body>
+  <div class="frame">
+    <div class="grid"></div>
+    <div class="ring"></div>
+    <div class="tile">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13 2.5 4.5 13.5h6.2l-1.2 8L18 10.5h-6l1.5-8z" />
+        <path d="M18.7 2.2l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8.8-2z" fill="currentColor" stroke="none" />
+      </svg>
+    </div>
+    <div class="caption">CONVERTLAB</div>
+  </div>
+</body>
+</html>

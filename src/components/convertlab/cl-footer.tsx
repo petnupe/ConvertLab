@@ -24,12 +24,17 @@ export function ClFooter() {
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2.2"
+                strokeWidth="1.9"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 aria-hidden="true"
               >
-                <path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z" />
+                <path d="M13 2.5 4.5 13.5h6.2l-1.2 8L18 10.5h-6l1.5-8z" />
+                <path
+                  d="M18.7 2.2l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8.8-2z"
+                  fill="currentColor"
+                  stroke="none"
+                />
               </svg>
             </span>
             <p className="text-xl font-bold tracking-tight text-white">
