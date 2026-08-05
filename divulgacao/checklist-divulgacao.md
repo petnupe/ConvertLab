@@ -3,11 +3,20 @@
 > Fazer de casa. Marque conforme for concluindo. Atualizado em ago/2026 · versionado.
 
 ## 0. Pré-requisitos (antes de postar)
+- [ ] Configurar SMTP na Vercel (**Settings → Environment Variables**):
+  - [ ] `SMTP_HOST=smtp.hostinger.com`
+  - [ ] `SMTP_PORT=465`
+  - [ ] `SMTP_SECURE=ssl`
+  - [ ] `SMTP_USER=contato@cuidadosmeus.com.br`
+  - [ ] `SMTP_PASSWORD=<senha>`
+  - [ ] `SMTP_FROM_EMAIL=contato@cuidadosmeus.com.br`
+  - [ ] `SMTP_FROM_NAME=ConvertLab`
+  - [ ] `MAIL_TO=contato@cuidadosmeus.com.br`
+  - [ ] `WHATSAPP_SUPPORT_NUMBER=5551991289103`
+- [ ] Fazer redeploy para as variáveis valerem
 - [ ] Testar o formulário de ponta a ponta no site (`/` → "Solicitar Projeto")
   - [ ] Lead chega por e-mail (solução ideal)
   - [ ] OU fallback abre WhatsApp `51 99128-9103`
-- [ ] Verificar domínio `cuidadosmeus.com.br` no Resend (resend.com/domains)
-  - [ ] Se não verificado: trocar `MAIL_FROM` para `onboarding@resend.dev`
 - [ ] Conferir as 3 demos novas no celular: `/estetica`, `/pet`, `/construtora`
 - [ ] Definir preço/pacotes de orçamento (para responder leads rápido)
 
@@ -55,6 +64,6 @@
 - [ ] Revisar métricas do Instagram (business) 1×/semana
 
 ## Próximos passos sugeridos
-- Criar a conta hoje e fazer o item 0 (Resend)
+- Criar a conta hoje e fazer o item 0 (SMTP na Vercel)
 - Gerar o card e o link na bio
 - Postar o primeiro conteúdo ainda esta semana

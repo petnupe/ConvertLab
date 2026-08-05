@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
 export const runtime = "nodejs";
 
-const FALLBACK_FROM = process.env.MAIL_FROM ?? "contato@cuidadosmeus.com.br";
+const SMTP_HOST = process.env.SMTP_HOST;
+const SMTP_PORT = Number(process.env.SMTP_PORT ?? 465);
+const SMTP_SECURE = (process.env.SMTP_SECURE ?? "ssl").toLowerCase() === "ssl";
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASS = process.env.SMTP_PASSWORD;
+const FROM_NAME = process.env.SMTP_FROM_NAME ?? "ConvertLab";
+const FROM_EMAIL = process.env.SMTP_FROM_EMAIL ?? "contato@cuidadosmeus.com.br";
+const FROM = `${FROM_NAME} <${FROM_EMAIL}>`;
 const TO = process.env.MAIL_TO ?? "contato@cuidadosmeus.com.br";
-const FROM = `ConvertLab <${FALLBACK_FROM}>`;
 
 const FIELDS = [
   { key: "nome", label: "Nome" },
@@ -20,9 +26,9 @@ const FIELDS = [
 type ContactPayload = Record<string, string>;
 
 export async function POST(request: Request) {
-  if (!process.env.RESEND_API_KEY) {
+  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
     return NextResponse.json(
-      { ok: false, error: "RESEND_API_KEY não configurada." },
+      { ok: false, error: "SMTP não configurado." },
       { status: 500 },
     );
   }
@@ -53,14 +59,21 @@ export async function POST(request: Request) {
   }
 
   try {
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    await resend.emails.send({
+    const transporter = nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: SMTP_SECURE,
+      auth: { user: SMTP_USER, pass: SMTP_PASS },
+    });
+
+    await transporter.sendMail({
       from: FROM,
       to: TO,
       subject: "Novo briefing — ConvertLab",
       text: lines,
       replyTo: process.env.MAIL_TO || body.email || TO,
     });
+
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Falha ao enviar email:", error);
