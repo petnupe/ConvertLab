@@ -11,6 +11,7 @@ import {
   Upload,
   X,
   ImageIcon,
+  Loader2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -67,7 +68,9 @@ const fields = [
   },
 ] as const;
 
-type FormState = Record<(typeof fields)[number]["name"], string>;
+type FormState = Record<(typeof fields)[number]["name"], string> & {
+  servico_outro: string;
+};
 
 const initial: FormState = {
   nome: "",
@@ -77,12 +80,16 @@ const initial: FormState = {
   servico: "",
   cor: "",
   referencias: "",
+  servico_outro: "",
 };
+
+const OUTRO = "Outro segmento";
 
 export function ClForm() {
   const [data, setData] = useState<FormState>(initial);
   const [logo, setLogo] = useState<File | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
 
   const set = (key: keyof FormState) => (
     e: ChangeEvent<
@@ -93,9 +100,16 @@ export function ClForm() {
   const onLogoChange = (e: ChangeEvent<HTMLInputElement>) =>
     setLogo(e.target.files?.[0] ?? null);
 
+  const effectiveServico =
+    data.servico === OUTRO ? data.servico_outro : data.servico;
+
   const summary = fields
-    .filter((f) => data[f.name]?.trim())
-    .map((f) => ({ label: f.label, value: data[f.name].trim() }));
+    .map((f) => ({
+      label: f.label,
+      value: f.name === "servico" ? effectiveServico : data[f.name],
+    }))
+    .filter((f) => f.value?.trim())
+    .map((f) => ({ label: f.label, value: f.value!.trim() }));
 
   if (submitted) {
     return (
@@ -157,8 +171,12 @@ export function ClForm() {
       "Novo briefing — ConvertLab",
       "------------------------",
       ...fields
-        .filter((f) => d[f.name]?.trim())
-        .map((f) => `${f.label}: ${d[f.name].trim()}`),
+        .map((f) => ({
+          label: f.label,
+          value: f.name === "servico" ? effectiveServico : d[f.name],
+        }))
+        .filter((f) => f.value?.trim())
+        .map((f) => `${f.label}: ${f.value!.trim()}`),
     ].join("\n");
 
   return (
@@ -166,9 +184,14 @@ export function ClForm() {
       onSubmit={async (e) => {
         e.preventDefault();
         const lines = buildLines(data);
+        setSending(true);
         try {
           const fd = new FormData();
           for (const [key, value] of Object.entries(data)) {
+            if (key === "servico" && data.servico === OUTRO) {
+              fd.append("servico", data.servico_outro);
+              continue;
+            }
             fd.append(key, value);
           }
           if (logo) fd.append("logo", logo);
@@ -185,6 +208,8 @@ export function ClForm() {
             "_blank",
             "noopener,noreferrer",
           );
+        } finally {
+          setSending(false);
         }
         setSubmitted(true);
       }}
@@ -251,6 +276,26 @@ export function ClForm() {
         </div>
       ))}
 
+      {data.servico === OUTRO ? (
+        <div className="flex flex-col gap-2">
+          <label
+            htmlFor="servico_outro"
+            className="text-sm font-medium text-white/80"
+          >
+            Qual segmento?
+          </label>
+          <input
+            id="servico_outro"
+            name="servico_outro"
+            type="text"
+            value={data.servico_outro}
+            onChange={set("servico_outro")}
+            placeholder="Ex.: E-commerce, Restaurante, Barber..."
+            className="w-full rounded-2xl border border-cyan-400/40 bg-white/[0.05] px-4 py-3 text-sm text-white placeholder:text-white/35 outline-none transition-colors focus:border-cyan-400/60 focus:bg-white/[0.08]"
+          />
+        </div>
+      ) : null}
+
       <div className="flex flex-col gap-2">
         <label
           htmlFor="logo"
@@ -309,10 +354,20 @@ export function ClForm() {
       <Button
         type="submit"
         size="lg"
-        className="mt-1 w-full gap-2 bg-violet-600 shadow-[0_18px_50px_-14px_rgba(124,58,237,0.9)] hover:bg-violet-700"
+        disabled={sending}
+        className="mt-1 w-full gap-2 bg-violet-600 shadow-[0_18px_50px_-14px_rgba(124,58,237,0.9)] hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-70"
       >
-        <Send className="h-5 w-5" aria-hidden="true" />
-        Enviar logo
+        {sending ? (
+          <>
+            <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+            Enviando...
+          </>
+        ) : (
+          <>
+            <Send className="h-5 w-5" aria-hidden="true" />
+            Enviar logo
+          </>
+        )}
       </Button>
 
       <p className="flex items-start gap-2 text-xs text-white/45">
