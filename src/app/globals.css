@@ -447,6 +447,72 @@ body {
   --color-line: #e2e8f2;
 }
 
+.theme-estetica {
+  --color-primary: #d32b6b;
+  --color-primary-50: #fdf0f5;
+  --color-primary-100: #fadce8;
+  --color-primary-600: #d32b6b;
+  --color-primary-700: #b3195a;
+  --color-primary-800: #8f1447;
+  --color-primary-900: #6d0f37;
+  --color-secondary: #e6b06b;
+  --color-secondary-400: #eec18a;
+  --color-secondary-500: #e6b06b;
+  --color-secondary-600: #c28f45;
+  --color-accent: #fff5f8;
+  --color-accent-50: #fff9fc;
+  --color-accent-100: #ffeef4;
+  --color-accent-200: #ffdbe7;
+  --color-ink: #2a0d1a;
+  --color-ink-soft: #3f1626;
+  --color-muted: #8a5c6e;
+  --color-line: #f0e2e8;
+}
+
+.theme-pet {
+  --color-primary: #0f9d76;
+  --color-primary-50: #e6f9f4;
+  --color-primary-100: #ccf2e8;
+  --color-primary-600: #0f9d76;
+  --color-primary-700: #0b7d60;
+  --color-primary-800: #086049;
+  --color-primary-900: #064836;
+  --color-secondary: #f59e0b;
+  --color-secondary-400: #f7b733;
+  --color-secondary-500: #f59e0b;
+  --color-secondary-600: #d97706;
+  --color-accent: #eefbf7;
+  --color-accent-50: #f5fcf9;
+  --color-accent-100: #d9f5ec;
+  --color-accent-200: #b8ebdb;
+  --color-ink: #0b211c;
+  --color-ink-soft: #1a352d;
+  --color-muted: #5b736c;
+  --color-line: #e0ebe7;
+}
+
+.theme-construtora {
+  --color-primary: #30353d;
+  --color-primary-50: #f0f1f3;
+  --color-primary-100: #e0e2e6;
+  --color-primary-600: #30353d;
+  --color-primary-700: #262a31;
+  --color-primary-800: #1c1f25;
+  --color-primary-900: #13151a;
+  --color-secondary: #c2703d;
+  --color-secondary-400: #d08a5c;
+  --color-secondary-500: #c2703d;
+  --color-secondary-600: #a2562e;
+  --color-accent: #f7f4ef;
+  --color-accent-50: #fbf9f6;
+  --color-accent-100: #ece5da;
+  --color-accent-200: #ddcfbc;
+  --color-ink: #16181d;
+  --color-ink-soft: #23272e;
+  --color-muted: #66707d;
+  --color-line: #e1e3e8;
+}
+
 /* Dark canvas used by the ConvertLab catalog */
 .cl-dark {
   background: #0a0812;

@@ -53,6 +53,33 @@ export const projects: Project[] = [
     image: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d",
     imageAlt: "Recepção moderna de clínica médica",
   },
+  {
+    slug: "estetica",
+    name: "Lumi Estética",
+    tag: "Estética & Beleza",
+    blurb:
+      "Clínica de estética e spa premium com avaliação gratuita, tratamentos faciais e day spa.",
+    image: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881",
+    imageAlt: "Ambiente moderno e acolhedor de um spa de estética",
+  },
+  {
+    slug: "pet",
+    name: "Amigo Animal",
+    tag: "Pet & Veterinária",
+    blurb:
+      "Pet shop e clínica veterinária completa com emergência 24h, banho e tosa e plano de saúde pet.",
+    image: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b",
+    imageAlt: "Cachorros felizes brincando juntos",
+  },
+  {
+    slug: "construtora",
+    name: "Alvorecer",
+    tag: "Construção",
+    blurb:
+      "Construtora de alto padrão com 20 anos e 120+ obras, garantia de obra e financiamento facilitado.",
+    image: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5",
+    imageAlt: "Equipe de construção civil em obra de alto padrão",
+  },
 ];
 
 export const convertlabContact = {
@@ -67,6 +94,9 @@ export const catalogServices = [
   "Imobiliária",
   "Academia & Fitness",
   "Clínica médica",
+  "Estética & Beleza",
+  "Pet & Veterinária",
+  "Construção",
   "Outro segmento",
 ];
 
