@@ -8,6 +8,9 @@ import {
   Send,
   ArrowRight,
   MessageCircleOff,
+  Upload,
+  X,
+  ImageIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -78,6 +81,7 @@ const initial: FormState = {
 
 export function ClForm() {
   const [data, setData] = useState<FormState>(initial);
+  const [logo, setLogo] = useState<File | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
   const set = (key: keyof FormState) => (
@@ -85,6 +89,9 @@ export function ClForm() {
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >,
   ) => setData((d) => ({ ...d, [key]: e.target.value }));
+
+  const onLogoChange = (e: ChangeEvent<HTMLInputElement>) =>
+    setLogo(e.target.files?.[0] ?? null);
 
   const summary = fields
     .filter((f) => data[f.name]?.trim())
@@ -160,10 +167,14 @@ export function ClForm() {
         e.preventDefault();
         const lines = buildLines(data);
         try {
+          const fd = new FormData();
+          for (const [key, value] of Object.entries(data)) {
+            fd.append(key, value);
+          }
+          if (logo) fd.append("logo", logo);
           const res = await fetch("/api/contact", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data),
+            body: fd,
           });
           if (!res.ok) throw new Error("api_error");
         } catch {
@@ -239,6 +250,61 @@ export function ClForm() {
           )}
         </div>
       ))}
+
+      <div className="flex flex-col gap-2">
+        <label
+          htmlFor="logo"
+          className="text-sm font-medium text-white/80"
+        >
+          Logo da marca <span className="text-white/40">(opcional)</span>
+        </label>
+        <label
+          htmlFor="logo"
+          className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-white/15 bg-white/[0.04] px-4 py-6 text-center transition-colors hover:border-cyan-400/50 hover:bg-white/[0.06]"
+        >
+          {logo ? (
+            <>
+              <span className="grid h-11 w-11 place-items-center rounded-xl bg-cyan-400/15 text-cyan-300">
+                <ImageIcon className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <span className="flex items-center gap-2 text-sm text-white/85">
+                <span className="max-w-[16rem] truncate">{logo.name}</span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setLogo(null);
+                  }}
+                  className="rounded-full p-1 text-white/50 transition-colors hover:bg-white/10 hover:text-white"
+                  aria-label="Remover logo"
+                >
+                  <X className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="grid h-11 w-11 place-items-center rounded-xl bg-white/[0.06] text-white/60">
+                <Upload className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <span className="text-sm text-white/70">
+                Clique para enviar seu logo
+              </span>
+              <span className="text-xs text-white/40">
+                PNG, JPG ou SVG · até 5 MB
+              </span>
+            </>
+          )}
+        </label>
+        <input
+          id="logo"
+          name="logo"
+          type="file"
+          accept="image/png,image/jpeg,image/svg+xml,image/webp"
+          onChange={onLogoChange}
+          className="hidden"
+        />
+      </div>
 
       <Button
         type="submit"

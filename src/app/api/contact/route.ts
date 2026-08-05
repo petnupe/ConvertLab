@@ -23,8 +23,6 @@ const FIELDS = [
   { key: "referencias", label: "Referências" },
 ];
 
-type ContactPayload = Record<string, string>;
-
 export async function POST(request: Request) {
   if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
     return NextResponse.json(
@@ -33,9 +31,9 @@ export async function POST(request: Request) {
     );
   }
 
-  let body: ContactPayload;
+  let form: FormData;
   try {
-    body = (await request.json()) as ContactPayload;
+    form = await request.formData();
   } catch {
     return NextResponse.json(
       { ok: false, error: "Payload inválido." },
@@ -43,11 +41,15 @@ export async function POST(request: Request) {
     );
   }
 
+  const values = Object.fromEntries(
+    FIELDS.map((f) => [f.key, String(form.get(f.key) ?? "")]),
+  );
+
   const lines = [
     "Novo briefing — ConvertLab",
     "------------------------",
-    ...FIELDS.filter((f) => body[f.key]?.trim()).map(
-      (f) => `${f.label}: ${body[f.key].trim()}`,
+    ...FIELDS.filter((f) => values[f.key]?.trim()).map(
+      (f) => `${f.label}: ${values[f.key].trim()}`,
     ),
   ].join("\n");
 
@@ -57,6 +59,12 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+
+  const logo = form.get("logo");
+  const attachment =
+    logo instanceof File
+      ? [{ filename: logo.name, content: Buffer.from(await logo.arrayBuffer()) }]
+      : [];
 
   try {
     const transporter = nodemailer.createTransport({
@@ -71,7 +79,8 @@ export async function POST(request: Request) {
       to: TO,
       subject: "Novo briefing — ConvertLab",
       text: lines,
-      replyTo: process.env.MAIL_TO || body.email || TO,
+      attachments: attachment,
+      replyTo: values["instagram"] || TO,
     });
 
     return NextResponse.json({ ok: true });
