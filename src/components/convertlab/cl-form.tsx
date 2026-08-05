@@ -166,18 +166,23 @@ export function ClForm() {
     );
   }
 
-  const buildLines = (d: FormState) =>
-    [
-      "Novo briefing — ConvertLab",
-      "------------------------",
-      ...fields
-        .map((f) => ({
-          label: f.label,
-          value: f.name === "servico" ? effectiveServico : d[f.name],
-        }))
-        .filter((f) => f.value?.trim())
-        .map((f) => `${f.label}: ${f.value!.trim()}`),
-    ].join("\n");
+  const buildLines = (d: FormState) => {
+    const body = fields
+      .map((f) => ({
+        label: f.label,
+        value: f.name === "servico" ? effectiveServico : d[f.name],
+      }))
+      .filter((f) => f.value?.trim())
+      .map((f) => `${f.label}: ${f.value!.trim()}`).join("\n");
+
+    return body
+      ? [
+          "Novo briefing — ConvertLab",
+          "------------------------",
+          body,
+        ].join("\n")
+      : "Olá! Gostaria de criar uma landing page pelo ConvertLab. Pode me chamar? 🙂";
+  };
 
   return (
     <form
