@@ -98,9 +98,17 @@ export function ClFooter() {
               © {new Date().getFullYear()} ConvertLab. Todos os direitos
               reservados.
             </p>
-            <p className="text-sm text-white/40">
-              Landing pages que convertem.
-            </p>
+            <div className="flex items-center gap-4">
+              <a
+                href="/admin"
+                className="text-sm text-white/25 transition-colors hover:text-white/60"
+              >
+                Área admin
+              </a>
+              <p className="text-sm text-white/40">
+                Landing pages que convertem.
+              </p>
+            </div>
           </div>
         </div>
       </div>
