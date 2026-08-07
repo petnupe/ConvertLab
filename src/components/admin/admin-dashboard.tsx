@@ -9,7 +9,11 @@ import {
   Loader2,
   MessageCircle,
   Users,
+  FileText,
+  FileDown,
 } from "lucide-react";
+
+import { LeadMessageModal } from "@/components/admin/lead-message-modal";
 
 import {
   formatWhatsapp,
@@ -35,6 +39,12 @@ export function AdminDashboard({ leads }: { leads: Lead[] }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState<LeadStatus | "todos">("todos");
+  const [messageOpen, setMessageOpen] = useState(false);
+  const [message, setMessage] = useState(() =>
+    typeof window !== "undefined"
+      ? (localStorage.getItem("convertlab.whatsapp.message") ?? "")
+      : "",
+  );
 
   async function addLead(e: FormEvent) {
     e.preventDefault();
@@ -75,6 +85,29 @@ export function AdminDashboard({ leads }: { leads: Lead[] }) {
   async function removeLead(id: string) {
     const res = await fetch("/api/leads/" + id, { method: "DELETE" });
     if (res.ok) router.refresh();
+  }
+
+  function saveMessage(text: string) {
+    setMessage(text);
+    setMessageOpen(false);
+    localStorage.setItem("convertlab.whatsapp.message", text);
+  }
+
+  function downloadTxt() {
+    const links = visibleLeads.map((lead) =>
+      waLink(lead.whatsapp, message.replaceAll("%%NOME%%", lead.nome)),
+    );
+    const blob = new Blob([links.join("\n")], {
+      type: "text/plain;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "whatsapp-links-convertlab.txt";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   }
 
   const counts = LEAD_STATUSES.reduce<Record<LeadStatus, number>>(
@@ -170,7 +203,27 @@ export function AdminDashboard({ leads }: { leads: Lead[] }) {
               Leads cadastrados
             </h2>
 
-            <select
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setMessageOpen(true)}
+                className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-medium text-white/75 transition-colors hover:text-white"
+              >
+                <FileText className="h-4 w-4" aria-hidden="true" />
+                Mensagem
+              </button>
+
+              <button
+                type="button"
+                onClick={downloadTxt}
+                disabled={visibleLeads.length === 0}
+                className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-violet-700 disabled:opacity-50"
+              >
+                <FileDown className="h-4 w-4" aria-hidden="true" />
+                Gerar .txt ({visibleLeads.length})
+              </button>
+
+              <select
               value={filter}
               onChange={(e) =>
                 setFilter(e.target.value as LeadStatus | "todos")
@@ -186,6 +239,7 @@ export function AdminDashboard({ leads }: { leads: Lead[] }) {
                 </option>
               ))}
             </select>
+          </div>
           </div>
 
           {visibleLeads.length === 0 ? (
@@ -243,6 +297,14 @@ export function AdminDashboard({ leads }: { leads: Lead[] }) {
             ))
           )}
         </section>
+
+        <LeadMessageModal
+          key={messageOpen ? "open" : "closed"}
+          open={messageOpen}
+          value={message}
+          onClose={() => setMessageOpen(false)}
+          onSave={saveMessage}
+        />
       </div>
     </div>
   );
