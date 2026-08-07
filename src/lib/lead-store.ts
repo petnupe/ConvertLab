@@ -1,8 +1,8 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
-import { promises as fs } from "node:fs";
-import path from "node:path";
+
+import { sql } from "@vercel/postgres";
 
 import {
   normalizeWhatsapp,
@@ -10,26 +10,25 @@ import {
   type LeadStatus,
 } from "@/lib/lead";
 
-const DATA_DIR = path.join(process.cwd(), ".notes");
-const DATA_FILE = path.join(DATA_DIR, "leads.json");
-
-async function readAll(): Promise<Lead[]> {
-  try {
-    const raw = await fs.readFile(DATA_FILE, "utf-8");
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-async function writeAll(leads: Lead[]): Promise<void> {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.writeFile(DATA_FILE, JSON.stringify(leads, null, 2), "utf-8");
-}
-
 export async function listLeads(): Promise<Lead[]> {
-  return readAll();
+  const { rows } = await sql`SELECT id, nome, whatsapp, status, criado FROM leads ORDER BY criado ASC`;
+  return (rows as unknown[]).map((r) =>
+    mapToLead(r as Record<string, unknown>),
+  );
+}
+
+function mapToLead(row: Record<string, unknown>): Lead {
+  const criado =
+    row.criado instanceof Date
+      ? row.criado.toISOString()
+      : new Date(String(row.criado)).toISOString();
+  return {
+    id: String(row.id),
+    nome: String(row.nome),
+    whatsapp: String(row.whatsapp),
+    status: String(row.status) as LeadStatus,
+    criado,
+  };
 }
 
 export async function addLead(input: {
@@ -37,35 +36,34 @@ export async function addLead(input: {
   whatsapp: string;
   status?: LeadStatus;
 }): Promise<Lead> {
-  const lead: Lead = {
-    id: randomUUID(),
-    nome: input.nome.trim(),
-    whatsapp: normalizeWhatsapp(input.whatsapp),
-    status: input.status ?? "novo",
+  const id = randomUUID();
+  const nome = input.nome.trim();
+  const whatsapp = normalizeWhatsapp(input.whatsapp);
+  const status = input.status ?? "novo";
+  await sql`INSERT INTO leads (id, nome, whatsapp, status, criado)
+    VALUES (${id}, ${nome}, ${whatsapp}, ${status}, NOW())
+    RETURNING criado`;
+  return {
+    id,
+    nome,
+    whatsapp,
+    status,
     criado: new Date().toISOString(),
   };
-  const leads = await readAll();
-  leads.push(lead);
-  await writeAll(leads);
-  return lead;
 }
 
 export async function updateLeadStatus(
   id: string,
   status: LeadStatus,
 ): Promise<Lead | null> {
-  const leads = await readAll();
-  const lead = leads.find((l) => l.id === id);
-  if (!lead) return null;
-  lead.status = status;
-  await writeAll(leads);
-  return lead;
+  const { rows } = await sql`UPDATE leads SET status = ${status}
+    WHERE id = ${id}
+    RETURNING id, nome, whatsapp, status, criado`;
+  if (rows.length === 0) return null;
+  return mapToLead(rows[0] as Record<string, unknown>);
 }
 
 export async function removeLead(id: string): Promise<boolean> {
-  const leads = await readAll();
-  const next = leads.filter((l) => l.id !== id);
-  if (next.length === leads.length) return false;
-  await writeAll(next);
-  return true;
+  const { rowCount } = await sql`DELETE FROM leads WHERE id = ${id}`;
+  return (rowCount ?? 0) > 0;
 }
