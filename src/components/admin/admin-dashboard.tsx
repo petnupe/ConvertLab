@@ -34,6 +34,7 @@ export function AdminDashboard({ leads }: { leads: Lead[] }) {
   const [whatsapp, setWhatsapp] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [filter, setFilter] = useState<LeadStatus | "todos">("todos");
 
   async function addLead(e: FormEvent) {
     e.preventDefault();
@@ -80,6 +81,11 @@ export function AdminDashboard({ leads }: { leads: Lead[] }) {
     (acc, s) => ((acc[s] = leads.filter((l) => l.status === s).length), acc),
     { novo: 0, contato: 0, orcamento: 0, fechado: 0, perdido: 0 },
   );
+
+  const visibleLeads =
+    filter === "todos"
+      ? leads
+      : leads.filter((l) => l.status === filter);
 
   return (
     <div className="theme-convertlab min-h-screen bg-[#0a0812]">
@@ -158,17 +164,36 @@ export function AdminDashboard({ leads }: { leads: Lead[] }) {
         </div>
 
         <section className="mt-8 space-y-3">
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-white/60">
-            <Users className="h-4 w-4" aria-hidden="true" />
-            Leads cadastrados
-          </h2>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-white/60">
+              <Users className="h-4 w-4" aria-hidden="true" />
+              Leads cadastrados
+            </h2>
 
-          {leads.length === 0 ? (
+            <select
+              value={filter}
+              onChange={(e) =>
+                setFilter(e.target.value as LeadStatus | "todos")
+              }
+              className="appearance-none rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-cyan-400/60"
+            >
+              <option value="todos" className="bg-[#14102a]">
+                Todas as situações
+              </option>
+              {LEAD_STATUSES.map((s) => (
+                <option key={s} value={s} className="bg-[#14102a]">
+                  {STATUS_LABELS[s]}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {visibleLeads.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-white/15 px-4 py-8 text-center text-sm text-white/40">
-              Nenhum lead cadastrado ainda. Adicione pelo formulário acima.
+              Nenhum lead neste filtro.
             </p>
           ) : (
-            leads.map((lead) => (
+            visibleLeads.map((lead) => (
               <div
                 key={lead.id}
                 className="cl-card flex flex-col gap-3 rounded-2xl p-4 sm:flex-row sm:items-center"
