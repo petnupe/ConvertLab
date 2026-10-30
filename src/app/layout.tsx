@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ConvertLab — Landing pages que convertem",
+  title: "ConvertScale — Landing pages que convertem",
   description:
     "Projetadas para converter. Desenvolvidas para crescer. Landing pages de alta conversão entregues em 24 horas, do briefing à publicação.",
 };

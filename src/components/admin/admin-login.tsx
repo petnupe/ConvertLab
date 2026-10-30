@@ -42,7 +42,7 @@ export function AdminLogin() {
   }
 
   return (
-    <main className="theme-convertlab flex min-h-screen flex-col items-center justify-center bg-[#0a0812] px-6">
+    <main className="theme-convertscale flex min-h-screen flex-col items-center justify-center bg-[#0a0812] px-6">
       <div className="w-full max-w-sm">
         <div className="cl-card rounded-3xl p-8">
           <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-violet-600 to-cyan-400 text-white">
@@ -52,7 +52,7 @@ export function AdminLogin() {
             Área restrita
           </h1>
           <p className="mt-1 text-sm text-white/55">
-            Login de administrador do ConvertLab.
+            Login de administrador do ConvertScale.
           </p>
 
           <form onSubmit={onSubmit} className="mt-7 flex flex-col gap-4">

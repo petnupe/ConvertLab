@@ -8,7 +8,7 @@ const SMTP_PORT = Number(process.env.SMTP_PORT ?? 465);
 const SMTP_SECURE = (process.env.SMTP_SECURE ?? "ssl").toLowerCase() === "ssl";
 const SMTP_USER = process.env.SMTP_USER;
 const SMTP_PASS = process.env.SMTP_PASSWORD;
-const FROM_NAME = process.env.SMTP_FROM_NAME ?? "ConvertLab";
+const FROM_NAME = process.env.SMTP_FROM_NAME ?? "ConvertScale";
 const FROM_EMAIL = process.env.SMTP_FROM_EMAIL ?? "contato@cuidadosmeus.com.br";
 const FROM = `${FROM_NAME} <${FROM_EMAIL}>`;
 const TO = process.env.MAIL_TO ?? "contato@cuidadosmeus.com.br";
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
   );
 
   const lines = [
-    "Novo briefing — ConvertLab",
+    "Novo briefing — ConvertScale",
     "------------------------",
     ...FIELDS.filter((f) => values[f.key]?.trim()).map(
       (f) => `${f.label}: ${values[f.key].trim()}`,
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
     await transporter.sendMail({
       from: FROM,
       to: TO,
-      subject: "Novo briefing — ConvertLab",
+      subject: "Novo briefing — ConvertScale",
       text: lines,
       attachments: attachment,
       replyTo: values["instagram"] || TO,

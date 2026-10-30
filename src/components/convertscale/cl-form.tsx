@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { catalogServices, convertlabContact } from "@/data/catalog";
+import { catalogServices, convertscaleContact } from "@/data/catalog";
 
 const fields = [
   {
@@ -177,11 +177,11 @@ export function ClForm() {
 
     return body
       ? [
-          "Novo briefing — ConvertLab",
+          "Novo briefing — ConvertScale",
           "------------------------",
           body,
         ].join("\n")
-      : "Olá! Gostaria de criar uma landing page pelo ConvertLab. Pode me chamar? 🙂";
+      : "Olá! Gostaria de criar uma landing page pelo ConvertScale. Pode me chamar? 🙂";
   };
 
   return (
@@ -207,7 +207,7 @@ export function ClForm() {
           if (!res.ok) throw new Error("api_error");
         } catch {
           window.open(
-            `https://wa.me/${convertlabContact.whatsappNumber}?text=${encodeURIComponent(
+            `https://wa.me/${convertscaleContact.whatsappNumber}?text=${encodeURIComponent(
               lines,
             )}`,
             "_blank",

@@ -42,7 +42,7 @@ export function AdminDashboard({ leads }: { leads: Lead[] }) {
   const [messageOpen, setMessageOpen] = useState(false);
   const [message, setMessage] = useState(() =>
     typeof window !== "undefined"
-      ? (localStorage.getItem("convertlab.whatsapp.message") ?? "")
+      ? (localStorage.getItem("convertscale.whatsapp.message") ?? "")
       : "",
   );
 
@@ -90,7 +90,7 @@ export function AdminDashboard({ leads }: { leads: Lead[] }) {
   function saveMessage(text: string) {
     setMessage(text);
     setMessageOpen(false);
-    localStorage.setItem("convertlab.whatsapp.message", text);
+    localStorage.setItem("convertscale.whatsapp.message", text);
   }
 
   function downloadTxt() {
@@ -103,7 +103,7 @@ export function AdminDashboard({ leads }: { leads: Lead[] }) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "whatsapp-links-convertlab.txt";
+    a.download = "whatsapp-links-convertscale.txt";
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -121,7 +121,7 @@ export function AdminDashboard({ leads }: { leads: Lead[] }) {
       : leads.filter((l) => l.status === filter);
 
   return (
-    <div className="theme-convertlab min-h-screen bg-[#0a0812]">
+    <div className="theme-convertscale min-h-screen bg-[#0a0812]">
       <div className="mx-auto max-w-4xl px-6 py-10">
         <header className="flex items-center justify-between">
           <div>
@@ -261,7 +261,7 @@ export function AdminDashboard({ leads }: { leads: Lead[] }) {
 
                 <div className="flex items-center gap-2">
                   <a
-                    href={waLink(lead.whatsapp, `Olá! Vi que você se interessou por uma landing page no ConvertLab.`)}
+                    href={waLink(lead.whatsapp, `Olá! Vi que você se interessou por uma landing page no ConvertScale.`)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-medium text-emerald-300 transition-colors hover:bg-emerald-400/10"

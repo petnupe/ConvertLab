@@ -337,7 +337,7 @@ body {
    component system keeps a distinct identity.
    ============================================ */
 
-.theme-convertlab {
+.theme-convertscale {
   --color-primary: #7c3aed;
   --color-primary-50: #f5f3ff;
   --color-primary-100: #ede9fe;
@@ -513,7 +513,7 @@ body {
   --color-line: #e1e3e8;
 }
 
-/* Dark canvas used by the ConvertLab catalog */
+/* Dark canvas used by the ConvertScale catalog */
 .cl-dark {
   background: #0a0812;
 }

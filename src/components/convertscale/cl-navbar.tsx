@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ArrowUpRight } from "lucide-react";
@@ -50,30 +51,18 @@ export function ClNavbar() {
           <a
             href="#inicio"
             className="flex items-center gap-2.5 text-white"
-            aria-label="ConvertLab — início"
+            aria-label="ConvertScale — início"
           >
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-violet-500 to-cyan-400 text-white shadow-[0_8px_24px_-8px_rgba(124,58,237,0.8)]">
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.9"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M13 2.5 4.5 13.5h6.2l-1.2 8L18 10.5h-6l1.5-8z" />
-                <path
-                  d="M18.7 2.2l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8.8-2z"
-                  fill="currentColor"
-                  stroke="none"
-                />
-              </svg>
-            </span>
+            <Image
+              src="/logo-convertscale.png"
+              alt=""
+              width={36}
+              height={36}
+              className="h-9 w-9 object-contain"
+              aria-hidden="true"
+            />
             <span className="text-lg font-bold tracking-tight">
-              Convert<span className="text-cyan-300">Lab</span>
+              Convert<span className="text-cyan-300">Scale</span>
             </span>
           </a>
 
