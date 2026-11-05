@@ -1,6 +1,7 @@
 import { ClNavbar } from "@/components/convertscale/cl-navbar";
 import { ClHero } from "@/components/convertscale/cl-hero";
 import { ClProjects } from "@/components/convertscale/cl-projects";
+import { ClSolutions } from "@/components/convertscale/cl-solutions";
 import { ClHow } from "@/components/convertscale/cl-how";
 import { ClDifferential } from "@/components/convertscale/cl-differential";
 import { ClFaq } from "@/components/convertscale/cl-faq";
@@ -12,6 +13,7 @@ export default function Home() {
       <ClNavbar />
       <main className="flex-1">
         <ClHero />
+        <ClSolutions />
         <ClProjects />
         <ClHow />
         <ClDifferential />

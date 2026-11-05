@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const links = [
+  { label: "Soluções", href: "#solucoes" },
   { label: "Projetos", href: "#projetos" },
   { label: "Como funciona", href: "#como-funciona" },
   { label: "O diferencial", href: "#diferencial" },

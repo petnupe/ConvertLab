@@ -16,22 +16,20 @@ export function ClProjects() {
           eyebrow="Portfólio"
           title={
             <>
-              Sites e sistemas que{" "}
+              Projetos que{" "}
               <span className="bg-gradient-to-r from-violet-400 to-cyan-300 bg-clip-text text-transparent">
                 vendem
               </span>
             </>
           }
-          subtitle="Conheça landing pages, vitrines online e sistemas feitos para apresentar negócios e apoiar sua operação."
+          subtitle="Cada página é desenhada para transformar visitantes em clientes — com identidade própria e conversão em primeiro lugar."
         />
 
         <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((project, i) => (
             <Reveal key={project.slug} delay={0.05 * i}>
               <Link
-                href={project.href ?? `/${project.slug}`}
-                target={project.href ? "_blank" : undefined}
-                rel={project.href ? "noopener noreferrer" : undefined}
+                href={`/${project.slug}`}
                 className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] transition-all duration-300 hover:-translate-y-1.5 hover:border-white/25 hover:bg-white/[0.07]"
               >
                 <div className="relative aspect-[16/11] overflow-hidden">
@@ -59,7 +57,7 @@ export function ClProjects() {
                     {project.blurb}
                   </p>
                   <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-cyan-300 transition-colors group-hover:text-cyan-200">
-                    {project.href ? "Acessar projeto" : "Ver Demo"}
+                    Ver Demo
                     <ArrowUpRight
                       className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
                       aria-hidden="true"

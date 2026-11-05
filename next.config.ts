@@ -15,10 +15,6 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "randomuser.me",
       },
-      {
-        protocol: "https",
-        hostname: "image.thum.io",
-      },
     ],
   },
   allowedDevOrigins: ["192.168.15.93"],

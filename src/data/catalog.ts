@@ -5,7 +5,6 @@ export type Project = {
   blurb: string;
   image: string;
   imageAlt: string;
-  href?: string;
 };
 
 export const projects: Project[] = [
@@ -81,31 +80,39 @@ export const projects: Project[] = [
     image: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5",
     imageAlt: "Equipe de construção civil em obra de alto padrão",
   },
+];
+
+export type Solution = Project & { href: string };
+
+export const solutions: Solution[] = [
   {
-    slug: "cuidadosmeus-store",
-    name: "Cuidados Meus Store",
+    slug: "vitrinou",
+    name: "Vitrinou!",
     tag: "Loja virtual",
-    blurb: "Vitrine online para apresentar produtos e facilitar a descoberta em uma experiência de compra organizada.",
-    image: "https://image.thum.io/get/maxAge/24/width/640/crop/440/https://sites.cuidadosmeus.com.br/store/",
-    imageAlt: "Captura da vitrine online Cuidados Meus Store",
+    blurb:
+      "Vitrine online com catálogo, preços e estoque para o cliente escolher os produtos e seguir direto para o WhatsApp da loja.",
+    image: "/solutions/vitrinou.webp",
+    imageAlt: "Página da Vitrinou! mostrando a criação de uma loja online",
     href: "https://sites.cuidadosmeus.com.br/store/",
   },
   {
-    slug: "sistemaspro360",
+    slug: "spro360",
     name: "SPro360",
-    tag: "Sistema de gestão",
-    blurb: "Plataforma web para organizar a gestão e as informações da operação de saúde em um só ambiente.",
-    image: "https://image.thum.io/get/maxAge/24/width/640/crop/440/https://app.sistemaspro360.com/",
-    imageAlt: "Captura da página inicial do sistema SPro360",
+    tag: "Gestão para saúde",
+    blurb:
+      "Sistema de gestão para clínicas, com agenda, prontuário eletrônico, relatórios e faturamento em uma plataforma.",
+    image: "/solutions/spro360.webp",
+    imageAlt: "Página de acesso do SPro360 com resumo da plataforma de gestão em saúde",
     href: "https://app.sistemaspro360.com/",
   },
   {
-    slug: "imobiliaria-landing",
-    name: "Landing Imobiliária",
-    tag: "Imobiliário",
-    blurb: "Página imobiliária que destaca imóveis e diferenciais do empreendimento, com foco em gerar contatos.",
-    image: "https://image.thum.io/get/maxAge/24/width/640/crop/440/https://sites.cuidadosmeus.com.br/imobiliaria_landing/",
-    imageAlt: "Captura da landing page imobiliária",
+    slug: "imob-system",
+    name: "Imob System",
+    tag: "Sistema imobiliário",
+    blurb:
+      "Site imobiliário com marca própria e painel para organizar os contatos de pessoas interessadas em imóveis.",
+    image: "/solutions/imob-system.webp",
+    imageAlt: "Página do Imob System para corretores de imóveis",
     href: "https://sites.cuidadosmeus.com.br/imobiliaria_landing/",
   },
 ];
