@@ -5,6 +5,7 @@ export type Project = {
   blurb: string;
   image: string;
   imageAlt: string;
+  href?: string;
 };
 
 export const projects: Project[] = [
@@ -79,6 +80,33 @@ export const projects: Project[] = [
       "Construtora de alto padrão com 20 anos e 120+ obras, garantia de obra e financiamento facilitado.",
     image: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5",
     imageAlt: "Equipe de construção civil em obra de alto padrão",
+  },
+  {
+    slug: "cuidadosmeus-store",
+    name: "Cuidados Meus Store",
+    tag: "Loja virtual",
+    blurb: "Vitrine online para apresentar produtos e facilitar a descoberta em uma experiência de compra organizada.",
+    image: "https://image.thum.io/get/maxAge/24/width/640/crop/440/https://sites.cuidadosmeus.com.br/store/",
+    imageAlt: "Captura da vitrine online Cuidados Meus Store",
+    href: "https://sites.cuidadosmeus.com.br/store/",
+  },
+  {
+    slug: "sistemaspro360",
+    name: "SPro360",
+    tag: "Sistema de gestão",
+    blurb: "Plataforma web para organizar a gestão e as informações da operação de saúde em um só ambiente.",
+    image: "https://image.thum.io/get/maxAge/24/width/640/crop/440/https://app.sistemaspro360.com/",
+    imageAlt: "Captura da página inicial do sistema SPro360",
+    href: "https://app.sistemaspro360.com/",
+  },
+  {
+    slug: "imobiliaria-landing",
+    name: "Landing Imobiliária",
+    tag: "Imobiliário",
+    blurb: "Página imobiliária que destaca imóveis e diferenciais do empreendimento, com foco em gerar contatos.",
+    image: "https://image.thum.io/get/maxAge/24/width/640/crop/440/https://sites.cuidadosmeus.com.br/imobiliaria_landing/",
+    imageAlt: "Captura da landing page imobiliária",
+    href: "https://sites.cuidadosmeus.com.br/imobiliaria_landing/",
   },
 ];
 
