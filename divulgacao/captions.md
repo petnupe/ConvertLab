@@ -12,6 +12,18 @@ A vaga da semana é sua? → link na bio.
 
 #segundafeira #landingpage #conversao #vendasonline #convertlab
 
+## Post de terça-feira (Instagram feed)
+
+Terça-feira. Enquanto você lê isso, seu concorrente pode estar fechando com o seu cliente.
+
+A busca dele começou ontem — e ele não vai esperar. Ele encontra quem aparece primeiro, com uma página que fala a língua dele.
+
+Na ConvertLab a gente tira sua página do zero em **24 horas**: briefing → desenvolvimento → aprovação → publicação. Design, copy e estratégia de conversão, tudo sob medida.
+
+Escaneie o QR Code e chame no WhatsApp. A vaga da semana é sua.
+
+#tercafeira #landingpage #conversao #marketingdigital #convertlab
+
 ## Instagram (feed)
 
 Sua página não está vendendo? Então ela está só decorando.
@@ -45,6 +57,34 @@ Vaga para o seu negócio? → [link]
 
 Página que não vende é decoração. A sua merece mais. ⚡
 Enquanto você lê, alguém fecha com o concorrente → link aqui.
+
+## Post promoção R$ 499 (Instagram feed)
+
+Seu concorrente já está online. E o cliente que você quer não vai esperar.
+
+Ele procura hoje, escolhe hoje e fecha com quem aparece primeiro. Enquanto você decide, alguém já está fechando com o seu concorrente.
+
+Sua página pode estar no ar amanhã. Design profissional, copy que converte, tudo pronto em 24 horas.
+
+Mas tem um porém: são **3 vagas** nesse valor. Depois, volta ao preço normal.
+
+Escaneie o QR Code ou chame no WhatsApp. Garanta a sua.
+
+#landingpage #conversao #marketingdigital #vendasonline #convertlab
+
+## Post promoção R$499 — Hoje (Instagram feed)
+
+Apenas R$499. Uma única vez. Sem mensalidade, sem surpresas.
+
+Sua landing page profissional pode estar no ar amanhã. Design sob medida, copy que converte, tudo pronto em 24 horas.
+
+Mas atenção: são apenas 3 vagas nesse valor. Depois, volta ao preço normal.
+
+Seu concorrente já está online. Não espere o preço subir.
+
+Escaneie o QR Code ou chame no WhatsApp. Garanta a sua agora.
+
+#499 #landingpage #conversao #marketingdigital #ofertalimitada #convertlab
 
 ## Dicas rápidas
 

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ConvertLab — Card de sexta-feira</title>
+<style>
+  :root {
+    --bg: #0a0812;
+    --card: #100d1e;
+    --violet: #7c3aed;
+    --violet-2: #6d28d9;
+    --cyan: #22d3ee;
+    --white: #ffffff;
+    --muted: #9b95b8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+    background: #060510;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    padding: 24px;
+  }
+
+  .card {
+    width: 1080px;
+    height: 1350px;
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(700px 500px at 12% -6%, rgba(124, 58, 237, 0.35), transparent 62%),
+      radial-gradient(640px 460px at 96% 4%, rgba(34, 211, 238, 0.22), transparent 60%),
+      radial-gradient(720px 560px at 85% 105%, rgba(124, 58, 237, 0.25), transparent 62%),
+      var(--bg);
+    border-radius: 48px;
+    padding: 32px 72px;
+    display: flex;
+    flex-direction: column;
+    isolation: isolate;
+  }
+
+  .card > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  .grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 82%;
+    z-index: 0;
+    overflow: hidden;
+    background-image: radial-gradient(rgba(255,255,255,0.07) 1.5px, transparent 1.5px);
+    background-size: 34px 34px;
+    -webkit-mask-image: radial-gradient(ellipse 75% 62% at 50% 38%, black 20%, transparent 100%);
+    mask-image: radial-gradient(ellipse 75% 62% at 50% 38%, black 20%, transparent 100%);
+  }
+
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    color: var(--white);
+  }
+
+  .brand-logo {
+    width: 62px;
+    height: 62px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #7c3aed, #22d3ee);
+    display: grid;
+    place-items: center;
+    box-shadow:
+      0 16px 40px -12px rgba(124, 58, 237, 0.8),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+
+  .brand-logo svg {
+    width: 32px;
+    height: 32px;
+    stroke: #fff;
+  }
+
+  .brand-name {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  .brand-name span { color: #67e8f9; }
+
+  .live {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    color: #d8d2ec;
+    font-size: 22px;
+    font-weight: 600;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 999px;
+    padding: 12px 24px;
+  }
+
+  .body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px 0 24px;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    align-self: flex-start;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--cyan);
+  }
+
+  .eyebrow::before {
+    content: "";
+    width: 34px;
+    height: 4px;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #7c3aed, #22d3ee);
+  }
+
+  h1 {
+    margin-top: 24px;
+    font-size: 104px;
+    line-height: 1.0;
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    color: var(--white);
+    text-wrap: balance;
+  }
+
+  .grad {
+    background: linear-gradient(100deg, #a78bfa 0%, #7c3aed 40%, #22d3ee 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  .pain {
+    margin-top: 32px;
+    font-size: 30px;
+    line-height: 1.4;
+    font-weight: 600;
+    color: var(--muted);
+    max-width: 800px;
+  }
+
+  .pain strong { color: #f87171; font-weight: 700; }
+
+  .value {
+    margin-top: 32px;
+    font-size: 34px;
+    line-height: 1.35;
+    font-weight: 600;
+    color: var(--muted);
+    max-width: 820px;
+  }
+
+  .value strong { color: #e6e1f5; font-weight: 700; }
+
+  /* Price + CTA row */
+  .offer-row {
+    margin-top: 40px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .price-box {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.3), rgba(34, 211, 238, 0.2));
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 28px;
+    padding: 28px 44px;
+    text-align: center;
+  }
+
+  .price-old {
+    font-size: 22px;
+    color: var(--muted);
+    text-decoration: line-through;
+    margin-bottom: 2px;
+  }
+
+  .price-new {
+    font-size: 68px;
+    font-weight: 900;
+    color: var(--white);
+    letter-spacing: -0.03em;
+  }
+
+  .price-new .currency {
+    font-size: 36px;
+    font-weight: 700;
+    vertical-align: super;
+  }
+
+  .price-installment {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--cyan);
+    margin-top: 4px;
+  }
+
+  .urgency-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    color: #000;
+    font-size: 24px;
+    font-weight: 800;
+    padding: 16px 28px;
+    border-radius: 999px;
+    box-shadow: 0 16px 40px -10px rgba(245, 158, 11, 0.6);
+  }
+
+  .urgency-badge svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .delivery-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(34, 211, 238, 0.15);
+    border: 1.5px solid rgba(34, 211, 238, 0.4);
+    color: var(--cyan);
+    font-size: 22px;
+    font-weight: 700;
+    padding: 14px 24px;
+    border-radius: 999px;
+  }
+
+  .delivery-badge svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* QR Code Section */
+  .qr-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    padding: 20px 0 0;
+  }
+
+  .qr-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+  }
+
+  .qr {
+    width: 260px;
+    height: 260px;
+    border-radius: 28px;
+    background: #fff;
+    padding: 16px;
+    box-shadow:
+      0 24px 70px -18px rgba(34, 211, 238, 0.55),
+      0 0 0 3px rgba(124, 58, 237, 0.3);
+  }
+
+  .qr img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-radius: 12px;
+  }
+
+  .qr-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 420px;
+  }
+
+  .qr-hint {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--white);
+    line-height: 1.2;
+  }
+
+  .qr-hint .grad {
+    background: linear-gradient(100deg, #a78bfa, #22d3ee);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .qr-sub {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .qr-instruction {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--muted);
+    text-align: center;
+    max-width: 600px;
+    line-height: 1.4;
+  }
+
+  .qr-instruction strong {
+    color: #e6e1f5;
+    font-weight: 700;
+  }
+
+  .bio-pill {
+    display: inline-flex;
+    align-items: center;
+    align-self: center;
+    gap: 10px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #d8d2ec;
+    background: rgba(255,255,255,0.08);
+    border: 1.5px solid rgba(255,255,255,0.3);
+    border-radius: 999px;
+    padding: 14px 24px;
+    margin-top: 16px;
+  }
+
+  .bio-pill span { color: #67e8f9; }
+
+  .bio-pill svg { width: 22px; height: 22px; color: #67e8f9; }
+</style>
+</head>
+<body>
+  <div class="card grain">
+    <div class="grid"></div>
+
+    <div class="top">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2.5 4.5 13.5h6.2l-1.2 8L18 10.5h-6l1.5-8z" />
+            <path d="M18.7 2.2l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8.8-2z" fill="currentColor" stroke="none" />
+          </svg>
+        </div>
+        <div class="brand-name">Convert<span>Lab</span></div>
+      </div>
+      <div class="live">Sexta-feira</div>
+    </div>
+
+    <div class="body">
+      <div class="eyebrow">Oferta de sexta — vagas limitadas</div>
+      <h1>
+        Seu concorrente<br />
+        <span class="grad">já está online.</span>
+      </h1>
+      <p class="pain">
+        Enquanto você lê isso, alguém está escolhendo <strong>ele</strong> — não você. Porque a página dele aparece primeiro.
+      </p>
+      <p class="value">
+        Sua página pode estar <strong>no ar amanhã</strong>. Sem demora, sem complicação.
+      </p>
+
+      <div class="offer-row">
+        <div class="price-box">
+          <div class="price-old">De R$ 999,00</div>
+          <div class="price-new"><span class="currency">R$</span> 499</div>
+          <div class="price-installment">1x no cartão ou Pix</div>
+        </div>
+        <div class="urgency-badge">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+          Só hoje
+        </div>
+        <div class="delivery-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v6l4 2"/>
+          </svg>
+          Pronta em 24h
+        </div>
+      </div>
+    </div>
+
+    <div class="qr-section">
+      <div class="qr-wrapper">
+        <div class="qr">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://wa.me/5551991289103?text=Ol%C3%A1%2C%20vim%20pelo%20Instagram%20e%20quero%20meu%20site%20por%20R%24499!&bgcolor=ffffff&color=0a0812" alt="QR Code ConvertLab" />
+        </div>
+        <div class="qr-meta">
+          <div class="qr-hint">Escaneie e <span class="grad">garanta sua vaga</span></div>
+          <div class="qr-sub">51 99128-9103 · resposta rápida</div>
+        </div>
+      </div>
+      <div class="qr-instruction">
+        <strong>Escaneie o QR Code</strong> para conversar direto pelo WhatsApp
+      </div>
+    </div>
+
+    <div class="bio-pill">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z" />
+        <path d="M8 9h8" /><path d="M8 13h5" />
+      </svg>
+      <span>@convertlab.br</span> · link na bio ↑
+    </div>
+  </div>
+</body>
+</html>
