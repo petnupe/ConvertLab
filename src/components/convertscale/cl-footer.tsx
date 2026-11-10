@@ -3,7 +3,8 @@ import { MessageCircle, Mail, ArrowUpRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { InstagramIcon } from "@/components/ui/instagram-icon";
-import { convertscaleContact, requestProjectUrl } from "@/data/catalog";
+import { convertscaleContact } from "@/data/catalog";
+import { WhatsAppButton } from "./cl-whatsapp";
 
 const nav = [
   { label: "Projetos", href: "#projetos" },
@@ -75,12 +76,13 @@ export function ClFooter() {
             </a>
           </div>
 
-          <a href={requestProjectUrl} target="_blank" rel="noopener noreferrer">
+          <a href="#diferencial">
             <Button size="lg" className="gap-2 bg-violet-600 hover:bg-violet-700">
               Solicitar Projeto
               <ArrowUpRight className="h-5 w-5" aria-hidden="true" />
             </Button>
           </a>
+          <WhatsAppButton size="lg" />
 
           <div className="flex w-full flex-col items-center gap-1 border-t border-white/10 pt-8 sm:flex-row sm:justify-between">
             <p className="text-sm text-white/40">

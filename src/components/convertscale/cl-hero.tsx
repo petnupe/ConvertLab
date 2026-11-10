@@ -1,6 +1,6 @@
 import { ArrowUpRight, MousePointerClick, Zap, Rocket } from "lucide-react";
 
-import { requestProjectUrl } from "@/data/catalog";
+import { WhatsAppButton } from "./cl-whatsapp";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Reveal } from "@/components/motion/reveal";
@@ -62,12 +62,13 @@ export function ClHero() {
           </Reveal>
 
           <Reveal delay={0.24} className="flex flex-wrap items-center justify-center gap-3">
-            <a href={requestProjectUrl} target="_blank" rel="noopener noreferrer">
+            <a href="#diferencial">
               <Button size="xl" className="gap-2 bg-violet-600 shadow-[0_18px_50px_-14px_rgba(124,58,237,0.9)] hover:bg-violet-700">
                 Solicitar Projeto
                 <ArrowUpRight className="h-5 w-5" aria-hidden="true" />
               </Button>
             </a>
+            <WhatsAppButton size="xl" />
             <a href="#projetos">
               <Button
                 size="xl"

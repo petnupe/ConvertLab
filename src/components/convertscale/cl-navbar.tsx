@@ -1,6 +1,6 @@
 "use client";
 
-import { requestProjectUrl } from "@/data/catalog";
+import { WhatsAppButton } from "./cl-whatsapp";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -82,12 +82,13 @@ export function ClNavbar() {
           </ul>
 
           <div className="hidden items-center gap-2 lg:flex">
-            <a href={requestProjectUrl} target="_blank" rel="noopener noreferrer">
+            <a href="#diferencial">
               <Button size="sm" className="gap-1.5 bg-violet-600 hover:bg-violet-700">
                 Solicitar Projeto
                 <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
               </Button>
             </a>
+            <WhatsAppButton size="sm" label="WhatsApp" />
           </div>
 
           <button
@@ -139,12 +140,13 @@ export function ClNavbar() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
               >
-                <a href={requestProjectUrl} target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)}>
+                <a href="#diferencial" onClick={() => setOpen(false)}>
                   <Button size="lg" className="w-full gap-2 bg-violet-600 hover:bg-violet-700">
                     Solicitar Projeto
                     <ArrowUpRight className="h-5 w-5" aria-hidden="true" />
                   </Button>
                 </a>
+                <WhatsAppButton size="lg" className="mt-3 w-full" onClick={() => setOpen(false)} />
               </motion.div>
             </div>
           </motion.div>

@@ -5,6 +5,7 @@ import { ArrowUpRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Reveal } from "@/components/motion/reveal";
+import { WhatsAppIcon } from "./cl-whatsapp";
 import { liveProjects, projects, requestProjectUrl } from "@/data/catalog";
 
 export function ClProjects() {
@@ -121,12 +122,18 @@ export function ClProjects() {
               <p className="text-sm font-medium text-white/55">
                 O próximo projeto aqui pode ser o seu negócio.
               </p>
-              <a href={requestProjectUrl} target="_blank" rel="noopener noreferrer">
+              <a href="#diferencial">
                 <Badge
                   variant="outline"
                   className="border-white/20 bg-white/5 px-4 py-2 text-white/85 hover:bg-white/10"
                 >
                   Solicitar Projeto
+                </Badge>
+              </a>
+              <a href={requestProjectUrl} target="_blank" rel="noopener noreferrer">
+                <Badge className="gap-1.5 border-transparent bg-[#25D366] px-4 py-2 text-[#06210f] hover:bg-[#1ebe5a]">
+                  <WhatsAppIcon className="h-4 w-4" />
+                  Falar no WhatsApp
                 </Badge>
               </a>
             </div>

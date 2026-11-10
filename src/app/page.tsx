@@ -5,6 +5,7 @@ import { ClSolutions } from "@/components/convertscale/cl-solutions";
 import { ClHow } from "@/components/convertscale/cl-how";
 import { ClDifferential } from "@/components/convertscale/cl-differential";
 import { ClFaq } from "@/components/convertscale/cl-faq";
+import { WhatsAppFloating } from "@/components/convertscale/cl-whatsapp";
 import { ClFooter } from "@/components/convertscale/cl-footer";
 
 export default function Home() {
@@ -20,6 +21,7 @@ export default function Home() {
         <ClFaq />
       </main>
       <ClFooter />
+      <WhatsAppFloating />
     </div>
   );
 }
