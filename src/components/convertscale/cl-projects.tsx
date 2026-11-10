@@ -5,7 +5,7 @@ import { ArrowUpRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Reveal } from "@/components/motion/reveal";
-import { projects } from "@/data/catalog";
+import { liveProjects, projects } from "@/data/catalog";
 
 export function ClProjects() {
   return (
@@ -25,7 +25,52 @@ export function ClProjects() {
           subtitle="Cada página é desenhada para transformar visitantes em clientes — com identidade própria e conversão em primeiro lugar."
         />
 
-        <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-2">
+          {liveProjects.map((project, i) => (
+            <Reveal key={project.slug} delay={0.06 * i} className="h-full">
+              <a
+                href={project.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-cyan-300/25 bg-white/[0.06] shadow-[0_0_40px_-12px] shadow-cyan-400/30 transition-all duration-300 hover:-translate-y-1.5 hover:border-cyan-300/50 hover:bg-white/[0.09]"
+              >
+                <div className="relative aspect-[16/9] overflow-hidden">
+                  <Image
+                    src={project.image}
+                    alt={project.imageAlt}
+                    fill
+                    sizes="(min-width: 768px) 50vw, 100vw"
+                    className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div
+                    className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"
+                    aria-hidden="true"
+                  />
+                  <Badge className="absolute left-4 top-4 border-white/20 bg-black/55 px-3 py-1.5 text-white backdrop-blur-md">
+                    {project.tag}
+                  </Badge>
+                </div>
+                <div className="flex flex-1 flex-col p-6 sm:p-7">
+                  <h3 className="text-2xl font-bold tracking-tight text-white">
+                    {project.name}
+                  </h3>
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-white/65 sm:text-base">
+                    {project.blurb}
+                  </p>
+                  <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-cyan-300 transition-colors group-hover:text-cyan-200">
+                    Visitar site
+                    <ArrowUpRight
+                      className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                      aria-hidden="true"
+                    />
+                  </span>
+                </div>
+              </a>
+            </Reveal>
+          ))}
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((project, i) => (
             <Reveal key={project.slug} delay={0.05 * i}>
               <Link

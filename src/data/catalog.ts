@@ -82,7 +82,50 @@ export const projects: Project[] = [
   },
 ];
 
-export type Solution = Project & { href: string };
+export type LiveProject = Project & { href: string };
+
+export const liveProjects: LiveProject[] = [
+  {
+    slug: "recanto-das-oliveiras",
+    name: "Recanto das Oliveiras",
+    tag: "Residencial geriátrico",
+    blurb:
+      "Residencial com cuidado humanizado, equipe de saúde dedicada e ambiente familiar, com visitas abertas sem agendamento.",
+    image: "/solutions/recantodasoliveiras.webp",
+    imageAlt: "Site do Residencial Recanto das Oliveiras",
+    href: "https://sites.cuidadosmeus.com.br/recantodasoliveiras/",
+  },
+  {
+    slug: "afmt",
+    name: "AFMT",
+    tag: "Associação",
+    blurb:
+      "Site da Associação dos Funcionários Municipais de Tramandaí, com cartão convênio para associados.",
+    image: "/solutions/afmt.webp",
+    imageAlt: "Site da AFMT, Associação dos Funcionários Municipais de Tramandaí",
+    href: "https://afmt.com.br/",
+  },
+  {
+    slug: "afumi",
+    name: "AFUMI",
+    tag: "Associação",
+    blurb: "Site da Associação dos Funcionários Municipais de Imbé.",
+    image: "/solutions/afumi.webp",
+    imageAlt: "Site da AFUMI, Associação dos Funcionários Municipais de Imbé",
+    href: "https://afumi.com.br/",
+  },
+  {
+    slug: "associamed",
+    name: "ASSOCIAMED",
+    tag: "Associação",
+    blurb: "Site da Associação dos Funcionários da Unimed Porto Alegre.",
+    image: "/solutions/associamed.webp",
+    imageAlt: "Site da ASSOCIAMED, Associação dos Funcionários da Unimed Porto Alegre",
+    href: "https://associamed.com.br/",
+  },
+];
+
+export type Solution =Project & { href: string };
 
 export const solutions: Solution[] = [
   {
@@ -94,6 +137,26 @@ export const solutions: Solution[] = [
     image: "/solutions/vitrinou.webp",
     imageAlt: "Página da Vitrinou! mostrando a criação de uma loja online",
     href: "https://sites.cuidadosmeus.com.br/store/",
+  },
+  {
+    slug: "tagarela",
+    name: "Tagarela",
+    tag: "Comunicação acessível",
+    blurb:
+      "Comunicação por pictogramas com voz, acessível no celular e com plano gratuito, para incluir quem precisa se expressar de outras formas.",
+    image: "/solutions/tagarela.webp",
+    imageAlt: "Página do Tagarela, aplicativo de comunicação por pictogramas",
+    href: "https://sites.cuidadosmeus.com.br/tagarela/landing",
+  },
+  {
+    slug: "messatia-lenita",
+    name: "Messatia Lenita",
+    tag: "Livro de condolências digital",
+    blurb:
+      "Livro de condolências digital para capelas: visitantes escaneiam um QR code, escrevem uma mensagem e ela aparece na TV do velório, com moderação da família.",
+    image: "/solutions/messatialenita.webp",
+    imageAlt: "Página da Messatia Lenita apresentando o livro de condolências digital para capelas",
+    href: "https://sites.cuidadosmeus.com.br/messatialenita",
   },
   {
     slug: "spro360",

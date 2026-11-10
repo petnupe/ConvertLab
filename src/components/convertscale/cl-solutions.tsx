@@ -7,7 +7,9 @@ import { Reveal } from "@/components/motion/reveal";
 import { solutions } from "@/data/catalog";
 
 export function ClSolutions() {
-  const [featured, ...otherSolutions] = solutions;
+  const [featured, ...rest] = solutions;
+  const mediumSolutions = rest.filter((s) => ["tagarela", "messatia-lenita"].includes(s.slug));
+  const otherSolutions = rest.filter((s) => !mediumSolutions.includes(s));
 
   return (
     <section id="solucoes" className="cl-dark-soft relative overflow-hidden py-24 sm:py-32">
@@ -69,6 +71,46 @@ export function ClSolutions() {
                 </div>
               </a>
             </Reveal>
+
+            {mediumSolutions.map((medium, index) => (
+              <Reveal key={medium.slug} delay={0.05 * (index + 1)} className="lg:col-span-2">
+                <a
+                  href={medium.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group grid h-full overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] transition-all duration-300 hover:-translate-y-1 hover:border-white/25 hover:bg-white/[0.07] md:grid-cols-2"
+                >
+                  <div className="relative aspect-[16/10] overflow-hidden md:aspect-auto md:min-h-[16rem]">
+                    <Image
+                      src={medium.image}
+                      alt={medium.imageAlt}
+                      fill
+                      sizes="(min-width: 768px) 50vw, 100vw"
+                      className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]"
+                    />
+                    <div
+                      className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"
+                      aria-hidden="true"
+                    />
+                    <Badge className="absolute left-4 top-4 border-white/20 bg-black/55 px-3 py-1.5 text-white backdrop-blur-md">
+                      {medium.tag}
+                    </Badge>
+                  </div>
+                  <div className="flex flex-col justify-center p-6 sm:p-8">
+                    <h3 className="text-2xl font-bold tracking-tight text-white">
+                      {medium.name}
+                    </h3>
+                    <p className="mt-3 text-sm leading-relaxed text-white/60 sm:text-base">
+                      {medium.blurb}
+                    </p>
+                    <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-cyan-300 transition-colors group-hover:text-cyan-200">
+                      Conhecer o projeto
+                      <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
+                    </span>
+                  </div>
+                </a>
+              </Reveal>
+            ))}
 
             {otherSolutions.map((solution, index) => (
               <Reveal key={solution.slug} delay={0.08 * index} className="h-full">
