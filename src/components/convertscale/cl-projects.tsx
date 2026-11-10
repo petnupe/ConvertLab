@@ -5,7 +5,7 @@ import { ArrowUpRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeading } from "@/components/site/section-heading";
 import { Reveal } from "@/components/motion/reveal";
-import { liveProjects, projects } from "@/data/catalog";
+import { liveProjects, projects, requestProjectUrl } from "@/data/catalog";
 
 export function ClProjects() {
   return (
@@ -121,7 +121,7 @@ export function ClProjects() {
               <p className="text-sm font-medium text-white/55">
                 O próximo projeto aqui pode ser o seu negócio.
               </p>
-              <a href="#diferencial">
+              <a href={requestProjectUrl} target="_blank" rel="noopener noreferrer">
                 <Badge
                   variant="outline"
                   className="border-white/20 bg-white/5 px-4 py-2 text-white/85 hover:bg-white/10"

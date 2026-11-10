@@ -3,7 +3,7 @@ import { MessageCircle, Mail, ArrowUpRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { InstagramIcon } from "@/components/ui/instagram-icon";
-import { convertscaleContact } from "@/data/catalog";
+import { convertscaleContact, requestProjectUrl } from "@/data/catalog";
 
 const nav = [
   { label: "Projetos", href: "#projetos" },
@@ -75,7 +75,7 @@ export function ClFooter() {
             </a>
           </div>
 
-          <a href="#diferencial">
+          <a href={requestProjectUrl} target="_blank" rel="noopener noreferrer">
             <Button size="lg" className="gap-2 bg-violet-600 hover:bg-violet-700">
               Solicitar Projeto
               <ArrowUpRight className="h-5 w-5" aria-hidden="true" />

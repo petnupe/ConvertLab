@@ -186,6 +186,10 @@ export const convertscaleContact = {
   email: "contato@convertlab.com.br",
 };
 
+export const requestProjectUrl = `https://wa.me/${convertscaleContact.whatsappNumber}?text=${encodeURIComponent(
+  "Olá! Quero solicitar um projeto com a ConvertScale.",
+)}`;
+
 export const catalogServices = [
   "Odontologia",
   "Advocacia",

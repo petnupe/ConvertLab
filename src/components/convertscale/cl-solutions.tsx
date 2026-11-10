@@ -25,7 +25,7 @@ export function ClSolutions() {
               </span>
             </>
           }
-          subtitle="Conheça soluções digitais para vender online e organizar operações em diferentes segmentos."
+          subtitle="Conheça soluções digitais para vender online e organizar operações em diferentes segmentos. E se o que você precisa ainda não existe, a gente desenvolve: criamos soluções personalizadas para cada necessidade, tipo de empresa, negócio ou dor que você tenha."
         />
 
         {featured ? (
