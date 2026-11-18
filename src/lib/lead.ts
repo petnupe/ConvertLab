@@ -11,6 +11,12 @@ export interface Lead {
   whatsapp: string; // apenas dígitos: 55 + DDD + número
   status: LeadStatus;
   criado: string; // ISO
+  produtos: string[]; // ids de Produto (um prospect pode ter N produtos)
+}
+
+export interface Produto {
+  id: string;
+  nome: string;
 }
 
 export const LEAD_STATUSES: LeadStatus[] = [

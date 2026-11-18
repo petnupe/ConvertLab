@@ -11,9 +11,12 @@ import {
   Users,
   FileText,
   FileDown,
+  Package,
 } from "lucide-react";
 
 import { LeadMessageModal } from "@/components/admin/lead-message-modal";
+import { ProdutoMultiSelect } from "@/components/admin/produto-multiselect";
+import { ConfirmModal } from "@/components/admin/confirm-modal";
 
 import {
   formatWhatsapp,
@@ -22,6 +25,7 @@ import {
   LEAD_STATUSES,
   type Lead,
   type LeadStatus,
+  type Produto,
 } from "@/lib/lead";
 
 const STATUS_LABELS: Record<LeadStatus, string> = {
@@ -32,8 +36,20 @@ const STATUS_LABELS: Record<LeadStatus, string> = {
   perdido: "Perdido",
 };
 
-export function AdminDashboard({ leads }: { leads: Lead[] }) {
+export function AdminDashboard({
+  leads,
+  produtos,
+}: {
+  leads: Lead[];
+  produtos: Produto[];
+}) {
   const router = useRouter();
+  const [toDelete, setToDelete] = useState<
+    { kind: "produto"; item: Produto } | { kind: "lead"; item: Lead } | null
+  >(null);
+  const [produtoNome, setProdutoNome] = useState("");
+  const [produtoError, setProdutoError] = useState("");
+  const [produtoFilter, setProdutoFilter] = useState<string>("todos");
   const [nome, setNome] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [saving, setSaving] = useState(false);
@@ -82,6 +98,41 @@ export function AdminDashboard({ leads }: { leads: Lead[] }) {
     if (res.ok) router.refresh();
   }
 
+  async function addProduto(e: FormEvent) {
+    e.preventDefault();
+    setProdutoError("");
+    if (!produtoNome.trim()) return;
+    const res = await fetch("/api/produtos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nome: produtoNome }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setProdutoError(data.error ?? "Erro ao salvar produto.");
+      return;
+    }
+    setProdutoNome("");
+    router.refresh();
+  }
+
+  async function removeProduto(p: Produto) {
+    const res = await fetch("/api/produtos/" + p.id, { method: "DELETE" });
+    if (res.ok) {
+      if (produtoFilter === p.id) setProdutoFilter("todos");
+      router.refresh();
+    }
+  }
+
+  async function setLeadProdutos(leadId: string, produtoIds: string[]) {
+    const res = await fetch(`/api/leads/${leadId}/produtos`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ produtoIds }),
+    });
+    if (res.ok) router.refresh();
+  }
+
   async function removeLead(id: string) {
     const res = await fetch("/api/leads/" + id, { method: "DELETE" });
     if (res.ok) router.refresh();
@@ -115,10 +166,14 @@ export function AdminDashboard({ leads }: { leads: Lead[] }) {
     { novo: 0, contato: 0, orcamento: 0, fechado: 0, perdido: 0 },
   );
 
-  const visibleLeads =
-    filter === "todos"
-      ? leads
-      : leads.filter((l) => l.status === filter);
+  const produtoNomes = new Map(produtos.map((p) => [p.id, p.nome]));
+
+  const visibleLeads = leads.filter(
+    (l) =>
+      (filter === "todos" || l.status === filter) &&
+      (produtoFilter === "todos" ||
+        (produtoFilter === "sem" ? l.produtos.length === 0 : l.produtos.includes(produtoFilter))),
+  );
 
   return (
     <div className="theme-convertscale min-h-screen bg-[#0a0812]">
@@ -196,6 +251,54 @@ export function AdminDashboard({ leads }: { leads: Lead[] }) {
           ))}
         </div>
 
+        <section className="cl-card mt-6 rounded-3xl p-5">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-white/60">
+            <Package className="h-4 w-4" aria-hidden="true" />
+            Produtos ({produtos.length})
+          </h2>
+          <form onSubmit={addProduto} className="mt-3 flex gap-3">
+            <input
+              value={produtoNome}
+              onChange={(e) => setProdutoNome(e.target.value)}
+              placeholder="Novo produto (ex.: Recanto das Oliveiras, CustomMyLanding)"
+              maxLength={80}
+              className="w-full flex-1 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-white placeholder:text-white/35 outline-none transition-colors focus:border-cyan-400/60"
+            />
+            <button
+              type="submit"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-violet-700"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Adicionar
+            </button>
+          </form>
+          {produtoError ? (
+            <p className="mt-3 rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-300">
+              {produtoError}
+            </p>
+          ) : null}
+          {produtos.length > 0 ? (
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {produtos.map((p) => (
+                <li
+                  key={p.id}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.05] py-1 pl-3 pr-1.5 text-sm text-white/85"
+                >
+                  {p.nome}
+                  <button
+                    type="button"
+                    onClick={() => setToDelete({ kind: "produto", item: p })}
+                    className="rounded-full p-1 text-white/40 transition-colors hover:bg-red-500/10 hover:text-red-400"
+                    aria-label={`Excluir produto ${p.nome}`}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </section>
+
         <section className="mt-8 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="flex items-center gap-2 text-sm font-semibold text-white/60">
@@ -222,6 +325,25 @@ export function AdminDashboard({ leads }: { leads: Lead[] }) {
                 <FileDown className="h-4 w-4" aria-hidden="true" />
                 Gerar .txt ({visibleLeads.length})
               </button>
+
+              <select
+                value={produtoFilter}
+                onChange={(e) => setProdutoFilter(e.target.value)}
+                aria-label="Filtrar por produto"
+                className="appearance-none rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-cyan-400/60"
+              >
+                <option value="todos" className="bg-[#14102a]">
+                  Todos os produtos
+                </option>
+                <option value="sem" className="bg-[#14102a]">
+                  Sem produto
+                </option>
+                {produtos.map((p) => (
+                  <option key={p.id} value={p.id} className="bg-[#14102a]">
+                    {p.nome}
+                  </option>
+                ))}
+              </select>
 
               <select
               value={filter}
@@ -257,6 +379,18 @@ export function AdminDashboard({ leads }: { leads: Lead[] }) {
                   <p className="mt-0.5 text-sm text-white/55">
                     {formatWhatsapp(lead.whatsapp)}
                   </p>
+                  {lead.produtos.length > 0 ? (
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {lead.produtos.map((pid) => (
+                        <span
+                          key={pid}
+                          className="rounded-full bg-violet-500/15 px-2 py-0.5 text-xs text-violet-200"
+                        >
+                          {produtoNomes.get(pid) ?? "—"}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -269,6 +403,12 @@ export function AdminDashboard({ leads }: { leads: Lead[] }) {
                     <MessageCircle className="h-4 w-4" aria-hidden="true" />
                     WhatsApp
                   </a>
+
+                  <ProdutoMultiSelect
+                    produtos={produtos}
+                    selected={lead.produtos}
+                    onChange={(ids) => setLeadProdutos(lead.id, ids)}
+                  />
 
                   <select
                     value={lead.status}
@@ -286,7 +426,7 @@ export function AdminDashboard({ leads }: { leads: Lead[] }) {
 
                   <button
                     type="button"
-                    onClick={() => removeLead(lead.id)}
+                    onClick={() => setToDelete({ kind: "lead", item: lead })}
                     className="rounded-xl p-2 text-white/40 transition-colors hover:bg-red-500/10 hover:text-red-400"
                     aria-label={`Excluir ${lead.nome}`}
                   >
@@ -297,6 +437,29 @@ export function AdminDashboard({ leads }: { leads: Lead[] }) {
             ))
           )}
         </section>
+
+        <ConfirmModal
+          open={toDelete !== null}
+          title={
+            toDelete?.kind === "produto"
+              ? "Excluir produto?"
+              : "Excluir lead?"
+          }
+          description={
+            toDelete?.kind === "produto"
+              ? `"${toDelete.item.nome}" será removido e deixará de constar em todos os prospects que o tinham. Essa ação não pode ser desfeita.`
+              : toDelete
+                ? `"${toDelete.item.nome}" será removido do cadastro, junto com seus produtos de interesse. Essa ação não pode ser desfeita.`
+                : ""
+          }
+          onClose={() => setToDelete(null)}
+          onConfirm={async () => {
+            if (!toDelete) return;
+            if (toDelete.kind === "produto") await removeProduto(toDelete.item);
+            else await removeLead(toDelete.item.id);
+            setToDelete(null);
+          }}
+        />
 
         <LeadMessageModal
           key={messageOpen ? "open" : "closed"}

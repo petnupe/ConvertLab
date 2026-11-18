@@ -1,5 +1,5 @@
 import { isAuthenticated } from "@/lib/session";
-import { listLeads } from "@/lib/lead-store";
+import { listLeads, listProdutos } from "@/lib/lead-store";
 import { AdminLogin } from "@/components/admin/admin-login";
 import { AdminDashboard } from "@/components/admin/admin-dashboard";
 
@@ -11,6 +11,6 @@ export default async function AdminPage() {
     return <AdminLogin />;
   }
 
-  const leads = await listLeads();
-  return <AdminDashboard leads={leads} />;
+  const [leads, produtos] = await Promise.all([listLeads(), listProdutos()]);
+  return <AdminDashboard leads={leads} produtos={produtos} />;
 }
