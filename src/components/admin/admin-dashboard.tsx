@@ -479,12 +479,26 @@ export function AdminDashboard({
         ) : null}
 
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {statuses.map((s) => (
-            <div key={s.id} className="cl-card rounded-2xl px-4 py-3 text-center">
-              <p className="text-2xl font-bold text-white">{counts.get(s.id) ?? 0}</p>
-              <p className="mt-0.5 truncate text-xs text-white/50">{s.nome}</p>
-            </div>
-          ))}
+          {statuses.map((s) => {
+            const active = filter === s.id;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setFilter(active ? "todos" : s.id)}
+                aria-pressed={active}
+                title={active ? "Remover filtro" : `Filtrar por ${s.nome}`}
+                className={`cl-card rounded-2xl px-4 py-3 text-center outline-none transition-colors focus-visible:border-cyan-400/60 ${
+                  active
+                    ? "!border-violet-500/70 bg-violet-500/15"
+                    : "hover:border-white/25"
+                }`}
+              >
+                <p className="text-2xl font-bold text-white">{counts.get(s.id) ?? 0}</p>
+                <p className="mt-0.5 truncate text-xs text-white/50">{s.nome}</p>
+              </button>
+            );
+          })}
         </div>
 
         <div className="mt-6 space-y-6">
