@@ -15,7 +15,12 @@ interface Props {
 /** Combo de múltipla escolha: marca/desmarca produtos de interesse do prospect. */
 export function ProdutoMultiSelect({ produtos, selected, onChange }: Props) {
   const [open, setOpen] = useState(false);
-  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const [pos, setPos] = useState<{
+    top?: number;
+    bottom?: number;
+    left: number;
+    maxH: number;
+  } | null>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -25,10 +30,15 @@ export function ProdutoMultiSelect({ produtos, selected, onChange }: Props) {
     if (open) return setOpen(false);
     const r = btnRef.current?.getBoundingClientRect();
     if (r) {
-      setPos({
-        top: r.bottom + 8,
-        left: Math.max(8, Math.min(r.right - MENU_W, window.innerWidth - MENU_W - 8)),
-      });
+      const below = window.innerHeight - r.bottom - 16;
+      const above = r.top - 16;
+      const left = Math.max(8, Math.min(r.right - MENU_W, window.innerWidth - MENU_W - 8));
+      // sem espaço embaixo (ex.: último registro da lista), abre para cima
+      if (below < 220 && above > below) {
+        setPos({ bottom: window.innerHeight - r.top + 8, left, maxH: Math.min(256, above) });
+      } else {
+        setPos({ top: r.bottom + 8, left, maxH: Math.min(256, below) });
+      }
     }
     setOpen(true);
   }
@@ -88,8 +98,15 @@ export function ProdutoMultiSelect({ produtos, selected, onChange }: Props) {
           ref={menuRef}
           role="listbox"
           aria-multiselectable="true"
-          style={{ position: "fixed", top: pos.top, left: pos.left, width: MENU_W }}
-          className="z-[60] max-h-64 overflow-y-auto rounded-2xl border border-white/10 bg-[#14102a] p-1.5 shadow-xl"
+          style={{
+            position: "fixed",
+            top: pos.top,
+            bottom: pos.bottom,
+            left: pos.left,
+            width: MENU_W,
+            maxHeight: pos.maxH,
+          }}
+          className="z-[60] overflow-y-auto rounded-2xl border border-white/10 bg-[#14102a] p-1.5 shadow-xl"
         >
           {produtos.length === 0 ? (
             <p className="px-3 py-2 text-sm text-white/45">
