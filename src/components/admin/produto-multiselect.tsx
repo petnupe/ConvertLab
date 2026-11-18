@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, ChevronDown, Package } from "lucide-react";
 
 import type { Produto } from "@/lib/lead";
@@ -14,19 +15,45 @@ interface Props {
 /** Combo de múltipla escolha: marca/desmarca produtos de interesse do prospect. */
 export function ProdutoMultiSelect({ produtos, selected, onChange }: Props) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const MENU_W = 256; // w-64
+
+  function toggleOpen() {
+    if (open) return setOpen(false);
+    const r = btnRef.current?.getBoundingClientRect();
+    if (r) {
+      setPos({
+        top: r.bottom + 8,
+        left: Math.max(8, Math.min(r.right - MENU_W, window.innerWidth - MENU_W - 8)),
+      });
+    }
+    setOpen(true);
+  }
 
   useEffect(() => {
     if (!open) return;
+    const close = () => setOpen(false);
     const onDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      if (!menuRef.current?.contains(t) && !btnRef.current?.contains(t)) close();
     };
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
+    window.addEventListener("resize", close);
+    const onScroll = (e: Event) => {
+      // rolar a própria lista de produtos não deve fechá-la
+      if (!menuRef.current?.contains(e.target as Node)) close();
+    };
+    window.addEventListener("scroll", onScroll, true);
     return () => {
       document.removeEventListener("mousedown", onDown);
       document.removeEventListener("keydown", onKey);
+      window.removeEventListener("resize", close);
+      window.removeEventListener("scroll", onScroll, true);
     };
   }, [open]);
 
@@ -37,10 +64,11 @@ export function ProdutoMultiSelect({ produtos, selected, onChange }: Props) {
   }
 
   return (
-    <div ref={ref} className="relative">
+    <div className="relative">
       <button
+        ref={btnRef}
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggleOpen}
         aria-haspopup="listbox"
         aria-expanded={open}
         className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-white outline-none transition-colors hover:border-white/25 focus:border-cyan-400/60"
@@ -50,11 +78,14 @@ export function ProdutoMultiSelect({ produtos, selected, onChange }: Props) {
         <ChevronDown className="h-4 w-4 text-white/50" aria-hidden="true" />
       </button>
 
-      {open ? (
+      {open && pos
+        ? createPortal(
         <div
+          ref={menuRef}
           role="listbox"
           aria-multiselectable="true"
-          className="absolute right-0 z-20 mt-2 max-h-64 w-64 overflow-y-auto rounded-2xl border border-white/10 bg-[#14102a] p-1.5 shadow-xl"
+          style={{ position: "fixed", top: pos.top, left: pos.left, width: MENU_W }}
+          className="z-[60] max-h-64 overflow-y-auto rounded-2xl border border-white/10 bg-[#14102a] p-1.5 shadow-xl"
         >
           {produtos.length === 0 ? (
             <p className="px-3 py-2 text-sm text-white/45">
@@ -86,8 +117,10 @@ export function ProdutoMultiSelect({ produtos, selected, onChange }: Props) {
               );
             })
           )}
-        </div>
-      ) : null}
+        </div>,
+        document.body,
+      )
+        : null}
     </div>
   );
 }

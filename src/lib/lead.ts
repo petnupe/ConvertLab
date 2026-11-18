@@ -14,6 +14,24 @@ export interface Lead {
   produtos: string[]; // ids de Produto (um prospect pode ter N produtos)
 }
 
+export const STATUS_LABELS: Record<LeadStatus, string> = {
+  novo: "Novo",
+  contato: "Em contato",
+  orcamento: "Orçamento",
+  fechado: "Fechado",
+  perdido: "Perdido",
+};
+
+/** Uma troca de situação de um lead. `de` é null no registro inicial (entrada do lead). */
+export interface StatusChange {
+  id: string;
+  leadId: string;
+  leadNome: string;
+  de: LeadStatus | null;
+  para: LeadStatus;
+  em: string; // ISO
+}
+
 export interface Produto {
   id: string;
   nome: string;

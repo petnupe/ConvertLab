@@ -9,6 +9,7 @@ import {
   type Lead,
   type LeadStatus,
   type Produto,
+  type StatusChange,
 } from "@/lib/lead";
 
 /** Cria as tabelas de produtos (idempotente), uma vez por processo. */
@@ -26,6 +27,18 @@ export function ensureSchema(): Promise<void> {
       produto_id TEXT NOT NULL REFERENCES produtos(id) ON DELETE CASCADE,
       PRIMARY KEY (lead_id, produto_id)
     )`;
+    await sql`CREATE TABLE IF NOT EXISTS lead_status_hist (
+      id TEXT PRIMARY KEY,
+      lead_id TEXT NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
+      de TEXT,
+      para TEXT NOT NULL,
+      em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`;
+    await sql`CREATE INDEX IF NOT EXISTS lead_status_hist_em_idx ON lead_status_hist (em)`;
+    // Leads anteriores ao histórico ganham um registro inicial (situação atual, data de criação).
+    await sql`INSERT INTO lead_status_hist (id, lead_id, de, para, em)
+      SELECT gen_random_uuid()::text, l.id, NULL, l.status, l.criado FROM leads l
+      WHERE NOT EXISTS (SELECT 1 FROM lead_status_hist h WHERE h.lead_id = l.id)`;
   })().catch((err) => {
     schemaReady = null;
     throw err;
@@ -74,9 +87,12 @@ export async function addLead(input: {
   const nome = input.nome.trim();
   const whatsapp = normalizeWhatsapp(input.whatsapp);
   const status = input.status ?? "novo";
+  await ensureSchema();
   await sql`INSERT INTO leads (id, nome, whatsapp, status, criado)
     VALUES (${id}, ${nome}, ${whatsapp}, ${status}, NOW())
     RETURNING criado`;
+  await sql`INSERT INTO lead_status_hist (id, lead_id, de, para, em)
+    VALUES (${randomUUID()}, ${id}, NULL, ${status}, NOW())`;
   return {
     id,
     nome,
@@ -91,11 +107,36 @@ export async function updateLeadStatus(
   id: string,
   status: LeadStatus,
 ): Promise<Lead | null> {
+  await ensureSchema();
+  const { rows: prev } = await sql`SELECT status FROM leads WHERE id = ${id}`;
+  if (prev.length === 0) return null;
+  const anterior = String(prev[0].status);
   const { rows } = await sql`UPDATE leads SET status = ${status}
     WHERE id = ${id}
     RETURNING id, nome, whatsapp, status, criado`;
   if (rows.length === 0) return null;
+  if (anterior !== status) {
+    await sql`INSERT INTO lead_status_hist (id, lead_id, de, para, em)
+      VALUES (${randomUUID()}, ${id}, ${anterior}, ${status}, NOW())`;
+  }
   return mapToLead(rows[0] as Record<string, unknown>);
+}
+
+/** Atualiza nome e WhatsApp do lead (já validados e normalizados). */
+export async function updateLeadDados(
+  id: string,
+  nome: string,
+  whatsapp: string,
+): Promise<{ id: string; nome: string; whatsapp: string } | null> {
+  const { rows } = await sql`UPDATE leads SET nome = ${nome}, whatsapp = ${whatsapp}
+    WHERE id = ${id}
+    RETURNING id, nome, whatsapp`;
+  if (rows.length === 0) return null;
+  return {
+    id: String(rows[0].id),
+    nome: String(rows[0].nome),
+    whatsapp: String(rows[0].whatsapp),
+  };
 }
 
 export async function removeLead(id: string): Promise<boolean> {
@@ -124,6 +165,22 @@ export async function addProduto(nome: string): Promise<Produto | null> {
   return (rowCount ?? 0) > 0 ? { id, nome: clean } : null;
 }
 
+/** Renomeia um produto. "duplicado" se outro já usa o nome (sem diferenciar maiúsculas). */
+export async function renameProduto(
+  id: string,
+  nome: string,
+): Promise<Produto | "duplicado" | null> {
+  await ensureSchema();
+  const clean = nome.trim();
+  const { rows: found } = await sql`SELECT id FROM produtos WHERE id = ${id}`;
+  if (found.length === 0) return null;
+  const { rows: dup } = await sql`SELECT id FROM produtos
+    WHERE LOWER(nome) = LOWER(${clean}) AND id <> ${id}`;
+  if (dup.length > 0) return "duplicado";
+  await sql`UPDATE produtos SET nome = ${clean} WHERE id = ${id}`;
+  return { id, nome: clean };
+}
+
 export async function removeProduto(id: string): Promise<boolean> {
   await ensureSchema();
   await sql`DELETE FROM lead_produtos WHERE produto_id = ${id}`;
@@ -150,4 +207,25 @@ export async function setLeadProdutos(
       VALUES (${leadId}, ${pid}) ON CONFLICT DO NOTHING`;
   }
   return ids;
+}
+
+/* ───────────── Histórico de situações ───────────── */
+
+export async function listStatusHistory(): Promise<StatusChange[]> {
+  await ensureSchema();
+  const { rows } = await sql`
+    SELECT h.id, h.lead_id, l.nome AS lead_nome, h.de, h.para, h.em
+    FROM lead_status_hist h
+    JOIN leads l ON l.id = h.lead_id
+    ORDER BY h.em DESC
+    LIMIT 5000`;
+  return rows.map((r) => ({
+    id: String(r.id),
+    leadId: String(r.lead_id),
+    leadNome: String(r.lead_nome),
+    de: r.de ? (String(r.de) as LeadStatus) : null,
+    para: String(r.para) as LeadStatus,
+    em:
+      r.em instanceof Date ? r.em.toISOString() : new Date(String(r.em)).toISOString(),
+  }));
 }

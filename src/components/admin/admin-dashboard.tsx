@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Plus,
@@ -12,41 +13,57 @@ import {
   FileText,
   FileDown,
   Package,
+  Pencil,
+  BarChart3,
 } from "lucide-react";
 
 import { LeadMessageModal } from "@/components/admin/lead-message-modal";
 import { ProdutoMultiSelect } from "@/components/admin/produto-multiselect";
 import { ConfirmModal } from "@/components/admin/confirm-modal";
+import { ProdutoEditModal } from "@/components/admin/produto-edit-modal";
+import { LeadEditModal } from "@/components/admin/lead-edit-modal";
 
 import {
   formatWhatsapp,
   waLink,
   normalizeWhatsapp,
   LEAD_STATUSES,
+  STATUS_LABELS,
   type Lead,
   type LeadStatus,
   type Produto,
 } from "@/lib/lead";
 
-const STATUS_LABELS: Record<LeadStatus, string> = {
-  novo: "Novo",
-  contato: "Em contato",
-  orcamento: "Orçamento",
-  fechado: "Fechado",
-  perdido: "Perdido",
-};
 
 export function AdminDashboard({
-  leads,
-  produtos,
+  leads: leadsProp,
+  produtos: produtosProp,
 }: {
   leads: Lead[];
   produtos: Produto[];
 }) {
   const router = useRouter();
+
+  // Estado local: a lista muda na hora após qualquer alteração; o router.refresh()
+  // sincroniza com o banco e, quando chegam props novas, elas substituem o estado.
+  const [leads, setLeads] = useState(leadsProp);
+  const [prevLeadsProp, setPrevLeadsProp] = useState(leadsProp);
+  if (leadsProp !== prevLeadsProp) {
+    setPrevLeadsProp(leadsProp);
+    setLeads(leadsProp);
+  }
+  const [produtos, setProdutos] = useState(produtosProp);
+  const [prevProdutosProp, setPrevProdutosProp] = useState(produtosProp);
+  if (produtosProp !== prevProdutosProp) {
+    setPrevProdutosProp(produtosProp);
+    setProdutos(produtosProp);
+  }
+
   const [toDelete, setToDelete] = useState<
     { kind: "produto"; item: Produto } | { kind: "lead"; item: Lead } | null
   >(null);
+  const [editingLead, setEditingLead] = useState<Lead | null>(null);
+  const [editingProduto, setEditingProduto] = useState<Produto | null>(null);
   const [produtoNome, setProdutoNome] = useState("");
   const [produtoError, setProdutoError] = useState("");
   const [produtoFilter, setProdutoFilter] = useState<string>("todos");
@@ -79,6 +96,7 @@ export function AdminDashboard({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Erro ao salvar.");
+      if (data.lead) setLeads((prev) => [...prev, data.lead as Lead]);
       setNome("");
       setWhatsapp("");
       router.refresh();
@@ -90,12 +108,38 @@ export function AdminDashboard({
   }
 
   async function setStatus(id: string, status: LeadStatus) {
+    setError("");
     const res = await fetch("/api/leads/" + id, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, status }),
     });
-    if (res.ok) router.refresh();
+    if (!res.ok) {
+      setError("Não foi possível atualizar a situação.");
+      return;
+    }
+    setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status } : l)));
+    router.refresh();
+  }
+
+  async function saveLeadDados(
+    id: string,
+    nome: string,
+    whatsapp: string,
+  ): Promise<string | null> {
+    const res = await fetch("/api/leads/" + id, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, nome, whatsapp }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      return data.error ?? "Erro ao salvar.";
+    }
+    setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, nome, whatsapp } : l)));
+    setEditingLead(null);
+    router.refresh();
+    return null;
   }
 
   async function addProduto(e: FormEvent) {
@@ -112,30 +156,81 @@ export function AdminDashboard({
       setProdutoError(data.error ?? "Erro ao salvar produto.");
       return;
     }
+    if (data.produto) {
+      setProdutos((prev) =>
+        [...prev, data.produto as Produto].sort((a, b) =>
+          a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" }),
+        ),
+      );
+    }
     setProdutoNome("");
     router.refresh();
   }
 
-  async function removeProduto(p: Produto) {
-    const res = await fetch("/api/produtos/" + p.id, { method: "DELETE" });
-    if (res.ok) {
-      if (produtoFilter === p.id) setProdutoFilter("todos");
-      router.refresh();
+  async function renameProduto(id: string, nome: string): Promise<string | null> {
+    const res = await fetch("/api/produtos/" + id, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nome }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      return data.error ?? "Erro ao salvar produto.";
     }
+    setProdutos((prev) =>
+      prev
+        .map((p) => (p.id === id ? { ...p, nome } : p))
+        .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" })),
+    );
+    setEditingProduto(null);
+    router.refresh();
+    return null;
+  }
+
+  async function removeProduto(p: Produto) {
+    setProdutoError("");
+    const res = await fetch("/api/produtos/" + p.id, { method: "DELETE" });
+    if (!res.ok) {
+      setProdutoError("Não foi possível excluir o produto.");
+      return;
+    }
+    if (produtoFilter === p.id) setProdutoFilter("todos");
+    setProdutos((prev) => prev.filter((x) => x.id !== p.id));
+    setLeads((prev) =>
+      prev.map((l) => ({ ...l, produtos: l.produtos.filter((id) => id !== p.id) })),
+    );
+    router.refresh();
   }
 
   async function setLeadProdutos(leadId: string, produtoIds: string[]) {
+    setError("");
+    const before = leads;
+    // otimista: o combo reflete a marcação imediatamente
+    setLeads((prev) =>
+      prev.map((l) => (l.id === leadId ? { ...l, produtos: produtoIds } : l)),
+    );
     const res = await fetch(`/api/leads/${leadId}/produtos`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ produtoIds }),
     });
-    if (res.ok) router.refresh();
+    if (!res.ok) {
+      setLeads(before);
+      setError("Não foi possível atualizar os produtos do prospect.");
+      return;
+    }
+    router.refresh();
   }
 
   async function removeLead(id: string) {
+    setError("");
     const res = await fetch("/api/leads/" + id, { method: "DELETE" });
-    if (res.ok) router.refresh();
+    if (!res.ok) {
+      setError("Não foi possível excluir o lead.");
+      return;
+    }
+    setLeads((prev) => prev.filter((l) => l.id !== id));
+    router.refresh();
   }
 
   function saveMessage(text: string) {
@@ -190,6 +285,14 @@ export function AdminDashboard({
                 : "nenhum fechado ainda"}
             </p>
           </div>
+          <div className="flex items-center gap-2">
+          <Link
+            href="/admin/relatorio"
+            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/75 transition-colors hover:text-white"
+          >
+            <BarChart3 className="h-4 w-4" aria-hidden="true" />
+            Relatório
+          </Link>
           <button
             type="button"
             onClick={async () => {
@@ -201,6 +304,7 @@ export function AdminDashboard({
             <LogOut className="h-4 w-4" aria-hidden="true" />
             Sair
           </button>
+          </div>
         </header>
 
         <form
@@ -282,16 +386,15 @@ export function AdminDashboard({
               {produtos.map((p) => (
                 <li
                   key={p.id}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.05] py-1 pl-3 pr-1.5 text-sm text-white/85"
                 >
-                  {p.nome}
                   <button
                     type="button"
-                    onClick={() => setToDelete({ kind: "produto", item: p })}
-                    className="rounded-full p-1 text-white/40 transition-colors hover:bg-red-500/10 hover:text-red-400"
-                    aria-label={`Excluir produto ${p.nome}`}
+                    onClick={() => setEditingProduto(p)}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-sm text-white/85 transition-colors hover:border-cyan-400/50 hover:text-white"
+                    aria-label={`Editar produto ${p.nome}`}
                   >
-                    <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    {p.nome}
+                    <Pencil className="h-3 w-3 text-white/40" aria-hidden="true" />
                   </button>
                 </li>
               ))}
@@ -426,6 +529,15 @@ export function AdminDashboard({
 
                   <button
                     type="button"
+                    onClick={() => setEditingLead(lead)}
+                    className="rounded-xl p-2 text-white/40 transition-colors hover:bg-white/10 hover:text-white"
+                    aria-label={`Editar ${lead.nome}`}
+                  >
+                    <Pencil className="h-4 w-4" aria-hidden="true" />
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={() => setToDelete({ kind: "lead", item: lead })}
                     className="rounded-xl p-2 text-white/40 transition-colors hover:bg-red-500/10 hover:text-red-400"
                     aria-label={`Excluir ${lead.nome}`}
@@ -437,6 +549,24 @@ export function AdminDashboard({
             ))
           )}
         </section>
+
+        <LeadEditModal
+          key={editingLead?.id ?? "none"}
+          lead={editingLead}
+          onClose={() => setEditingLead(null)}
+          onSave={saveLeadDados}
+        />
+
+        <ProdutoEditModal
+          key={editingProduto?.id ?? "none"}
+          produto={editingProduto}
+          onClose={() => setEditingProduto(null)}
+          onSave={renameProduto}
+          onRequestDelete={(p) => {
+            setEditingProduto(null);
+            setToDelete({ kind: "produto", item: p });
+          }}
+        />
 
         <ConfirmModal
           open={toDelete !== null}
