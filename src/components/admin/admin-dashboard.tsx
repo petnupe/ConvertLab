@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useSyncExternalStore, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -15,6 +15,8 @@ import {
   Package,
   Pencil,
   BarChart3,
+  ListChecks,
+  Tag,
 } from "lucide-react";
 
 import { LeadMessageModal } from "@/components/admin/lead-message-modal";
@@ -22,62 +24,195 @@ import { ProdutoMultiSelect } from "@/components/admin/produto-multiselect";
 import { ConfirmModal } from "@/components/admin/confirm-modal";
 import { ProdutoEditModal } from "@/components/admin/produto-edit-modal";
 import { LeadEditModal } from "@/components/admin/lead-edit-modal";
+import { CadastroSection } from "@/components/admin/cadastro-section";
 
 import {
   formatWhatsapp,
   waLink,
   normalizeWhatsapp,
-  LEAD_STATUSES,
-  STATUS_LABELS,
+  statusNome,
+  INITIAL_STATUS,
+  RAMO_NENHUM,
   type Lead,
   type LeadStatus,
   type Produto,
+  type Ramo,
+  type Status,
 } from "@/lib/lead";
 
+type Kind = "produto" | "status" | "ramo";
+interface Cad {
+  id: string;
+  nome: string;
+}
+
+/** Como cada cadastro conversa com a API e como é descrito nas mensagens. */
+const KINDS: Record<
+  Kind,
+  { api: string; field: string; singular: string; sort: boolean }
+> = {
+  produto: { api: "/api/produtos", field: "produto", singular: "produto", sort: true },
+  status: { api: "/api/status", field: "status", singular: "situação", sort: false },
+  ramo: { api: "/api/ramos", field: "ramo", singular: "ramo", sort: false },
+};
+
+const byNome = (a: Cad, b: Cad) =>
+  a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" });
+
+const SELECT =
+  "appearance-none rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-cyan-400/60";
+
+/* Texto da "Mensagem" (localStorage), lido sem divergir entre servidor e cliente. */
+const MESSAGE_KEY = "convertscale.whatsapp.message";
+const messageListeners = new Set<() => void>();
+function subscribeMessage(cb: () => void) {
+  messageListeners.add(cb);
+  window.addEventListener("storage", cb);
+  return () => {
+    messageListeners.delete(cb);
+    window.removeEventListener("storage", cb);
+  };
+}
+function readMessage(): string {
+  try {
+    return localStorage.getItem(MESSAGE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+/** Estado local que se re-sincroniza quando chegam props novas do servidor. */
+function useSynced<T>(prop: T) {
+  const [value, setValue] = useState(prop);
+  const [prev, setPrev] = useState(prop);
+  if (prop !== prev) {
+    setPrev(prop);
+    setValue(prop);
+  }
+  return [value, setValue] as const;
+}
 
 export function AdminDashboard({
   leads: leadsProp,
   produtos: produtosProp,
+  statuses: statusesProp,
+  ramos: ramosProp,
 }: {
   leads: Lead[];
   produtos: Produto[];
+  statuses: Status[];
+  ramos: Ramo[];
 }) {
   const router = useRouter();
 
   // Estado local: a lista muda na hora após qualquer alteração; o router.refresh()
   // sincroniza com o banco e, quando chegam props novas, elas substituem o estado.
-  const [leads, setLeads] = useState(leadsProp);
-  const [prevLeadsProp, setPrevLeadsProp] = useState(leadsProp);
-  if (leadsProp !== prevLeadsProp) {
-    setPrevLeadsProp(leadsProp);
-    setLeads(leadsProp);
-  }
-  const [produtos, setProdutos] = useState(produtosProp);
-  const [prevProdutosProp, setPrevProdutosProp] = useState(produtosProp);
-  if (produtosProp !== prevProdutosProp) {
-    setPrevProdutosProp(produtosProp);
-    setProdutos(produtosProp);
-  }
+  const [leads, setLeads] = useSynced(leadsProp);
+  const [produtos, setProdutos] = useSynced(produtosProp);
+  const [statuses, setStatuses] = useSynced(statusesProp);
+  const [ramos, setRamos] = useSynced(ramosProp);
 
   const [toDelete, setToDelete] = useState<
-    { kind: "produto"; item: Produto } | { kind: "lead"; item: Lead } | null
+    { kind: Kind | "lead"; item: Cad | Lead } | null
   >(null);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
-  const [editingProduto, setEditingProduto] = useState<Produto | null>(null);
-  const [produtoNome, setProdutoNome] = useState("");
-  const [produtoError, setProdutoError] = useState("");
+  const [editing, setEditing] = useState<{ kind: Kind; item: Cad } | null>(null);
+  const [cadError, setCadError] = useState<Record<Kind, string>>({
+    produto: "",
+    status: "",
+    ramo: "",
+  });
+
   const [produtoFilter, setProdutoFilter] = useState<string>("todos");
+  const [ramoFilter, setRamoFilter] = useState<string>("todos");
+  const [filter, setFilter] = useState<LeadStatus | "todos">("todos");
+
   const [nome, setNome] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [filter, setFilter] = useState<LeadStatus | "todos">("todos");
   const [messageOpen, setMessageOpen] = useState(false);
-  const [message, setMessage] = useState(() =>
-    typeof window !== "undefined"
-      ? (localStorage.getItem("convertscale.whatsapp.message") ?? "")
-      : "",
-  );
+  const message = useSyncExternalStore(subscribeMessage, readMessage, () => "");
+
+  /** Texto enviado pelo botão WhatsApp: o da "Mensagem" (com %%NOME%%); vazio = sem texto. */
+  const textFor = (lead: Lead) => message.replaceAll("%%NOME%%", lead.nome);
+
+  const setList = (kind: Kind) =>
+    kind === "produto" ? setProdutos : kind === "status" ? setStatuses : setRamos;
+
+  /* ───────── cadastros genéricos (produtos, situações, ramos) ───────── */
+
+  async function addCad(kind: Kind, nome: string): Promise<string | null> {
+    const cfg = KINDS[kind];
+    setCadError((e) => ({ ...e, [kind]: "" }));
+    const res = await fetch(cfg.api, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nome }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return data.error ?? `Erro ao salvar ${cfg.singular}.`;
+    const item = data[cfg.field] as Cad | undefined;
+    if (item) {
+      setList(kind)((prev: Cad[]) => {
+        const next = [...prev, item];
+        return cfg.sort ? next.sort(byNome) : next;
+      });
+    }
+    router.refresh();
+    return null;
+  }
+
+  async function renameCad(kind: Kind, id: string, nome: string): Promise<string | null> {
+    const cfg = KINDS[kind];
+    const res = await fetch(`${cfg.api}/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nome }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      return data.error ?? `Erro ao salvar ${cfg.singular}.`;
+    }
+    setList(kind)((prev: Cad[]) => {
+      const next = prev.map((p) => (p.id === id ? { ...p, nome } : p));
+      return cfg.sort ? next.sort(byNome) : next;
+    });
+    setEditing(null);
+    router.refresh();
+    return null;
+  }
+
+  async function removeCad(kind: Kind, item: Cad) {
+    const cfg = KINDS[kind];
+    setCadError((e) => ({ ...e, [kind]: "" }));
+    const res = await fetch(`${cfg.api}/${item.id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setCadError((e) => ({
+        ...e,
+        [kind]: data.error ?? `Não foi possível excluir ${cfg.singular}.`,
+      }));
+      return;
+    }
+    setList(kind)((prev: Cad[]) => prev.filter((x) => x.id !== item.id));
+    if (kind === "produto") {
+      if (produtoFilter === item.id) setProdutoFilter("todos");
+      setLeads((prev) =>
+        prev.map((l) => ({ ...l, produtos: l.produtos.filter((id) => id !== item.id) })),
+      );
+    } else if (kind === "ramo") {
+      if (ramoFilter === item.id) setRamoFilter("todos");
+      setLeads((prev) =>
+        prev.map((l) => (l.ramo === item.id ? { ...l, ramo: RAMO_NENHUM } : l)),
+      );
+    } else if (filter === item.id) {
+      setFilter("todos");
+    }
+    router.refresh();
+  }
+
+  /* ───────── leads ───────── */
 
   async function addLead(e: FormEvent) {
     e.preventDefault();
@@ -122,6 +257,23 @@ export function AdminDashboard({
     router.refresh();
   }
 
+  async function setRamo(id: string, ramoId: string) {
+    setError("");
+    const before = leads;
+    setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, ramo: ramoId } : l)));
+    const res = await fetch(`/api/leads/${id}/ramo`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ramoId }),
+    });
+    if (!res.ok) {
+      setLeads(before);
+      setError("Não foi possível atualizar o ramo de atividade.");
+      return;
+    }
+    router.refresh();
+  }
+
   async function saveLeadDados(
     id: string,
     nome: string,
@@ -140,66 +292,6 @@ export function AdminDashboard({
     setEditingLead(null);
     router.refresh();
     return null;
-  }
-
-  async function addProduto(e: FormEvent) {
-    e.preventDefault();
-    setProdutoError("");
-    if (!produtoNome.trim()) return;
-    const res = await fetch("/api/produtos", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nome: produtoNome }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      setProdutoError(data.error ?? "Erro ao salvar produto.");
-      return;
-    }
-    if (data.produto) {
-      setProdutos((prev) =>
-        [...prev, data.produto as Produto].sort((a, b) =>
-          a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" }),
-        ),
-      );
-    }
-    setProdutoNome("");
-    router.refresh();
-  }
-
-  async function renameProduto(id: string, nome: string): Promise<string | null> {
-    const res = await fetch("/api/produtos/" + id, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nome }),
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      return data.error ?? "Erro ao salvar produto.";
-    }
-    setProdutos((prev) =>
-      prev
-        .map((p) => (p.id === id ? { ...p, nome } : p))
-        .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" })),
-    );
-    setEditingProduto(null);
-    router.refresh();
-    return null;
-  }
-
-  async function removeProduto(p: Produto) {
-    setProdutoError("");
-    const res = await fetch("/api/produtos/" + p.id, { method: "DELETE" });
-    if (!res.ok) {
-      setProdutoError("Não foi possível excluir o produto.");
-      return;
-    }
-    if (produtoFilter === p.id) setProdutoFilter("todos");
-    setProdutos((prev) => prev.filter((x) => x.id !== p.id));
-    setLeads((prev) =>
-      prev.map((l) => ({ ...l, produtos: l.produtos.filter((id) => id !== p.id) })),
-    );
-    router.refresh();
   }
 
   async function setLeadProdutos(leadId: string, produtoIds: string[]) {
@@ -234,15 +326,17 @@ export function AdminDashboard({
   }
 
   function saveMessage(text: string) {
-    setMessage(text);
     setMessageOpen(false);
-    localStorage.setItem("convertscale.whatsapp.message", text);
+    try {
+      localStorage.setItem(MESSAGE_KEY, text);
+    } catch {
+      /* sem armazenamento disponível: a mensagem não é lembrada */
+    }
+    messageListeners.forEach((l) => l());
   }
 
   function downloadTxt() {
-    const links = visibleLeads.map((lead) =>
-      waLink(lead.whatsapp, message.replaceAll("%%NOME%%", lead.nome)),
-    );
+    const links = visibleLeads.map((lead) => waLink(lead.whatsapp, textFor(lead)));
     const blob = new Blob([links.join("\n")], {
       type: "text/plain;charset=utf-8",
     });
@@ -256,19 +350,59 @@ export function AdminDashboard({
     URL.revokeObjectURL(url);
   }
 
-  const counts = LEAD_STATUSES.reduce<Record<LeadStatus, number>>(
-    (acc, s) => ((acc[s] = leads.filter((l) => l.status === s).length), acc),
-    { novo: 0, contato: 0, orcamento: 0, fechado: 0, perdido: 0 },
-  );
+  /* ───────── derivados ───────── */
+
+  const counts = new Map<string, number>();
+  for (const l of leads) counts.set(l.status, (counts.get(l.status) ?? 0) + 1);
 
   const produtoNomes = new Map(produtos.map((p) => [p.id, p.nome]));
+  const ramoNomes = new Map(ramos.map((r) => [r.id, r.nome]));
+  const fechados = counts.get("fechado") ?? 0;
 
   const visibleLeads = leads.filter(
     (l) =>
       (filter === "todos" || l.status === filter) &&
+      (ramoFilter === "todos" || l.ramo === ramoFilter) &&
       (produtoFilter === "todos" ||
         (produtoFilter === "sem" ? l.produtos.length === 0 : l.produtos.includes(produtoFilter))),
   );
+
+  const deleteInfo = (() => {
+    if (!toDelete) return { title: "", description: "" };
+    if (toDelete.kind === "lead") {
+      return {
+        title: "Excluir lead?",
+        description: `"${(toDelete.item as Lead).nome}" será removido do cadastro, junto com seus produtos de interesse e histórico. Essa ação não pode ser desfeita.`,
+      };
+    }
+    const nome = (toDelete.item as Cad).nome;
+    if (toDelete.kind === "produto") {
+      return {
+        title: "Excluir produto?",
+        description: `"${nome}" será removido e deixará de constar em todos os prospects que o tinham. Essa ação não pode ser desfeita.`,
+      };
+    }
+    if (toDelete.kind === "ramo") {
+      return {
+        title: "Excluir ramo de atividade?",
+        description: `"${nome}" será removido e os leads desse ramo passarão para "Nenhum". Essa ação não pode ser desfeita.`,
+      };
+    }
+    return {
+      title: "Excluir situação?",
+      description: `"${nome}" será removida do cadastro. Só é possível excluir situações sem leads. Essa ação não pode ser desfeita.`,
+    };
+  })();
+
+  const editingTitle = editing
+    ? { produto: "Editar produto", status: "Editar situação", ramo: "Editar ramo de atividade" }[
+        editing.kind
+      ]
+    : undefined;
+  const editingProtected =
+    editing !== null &&
+    ((editing.kind === "status" && editing.item.id === INITIAL_STATUS) ||
+      (editing.kind === "ramo" && editing.item.id === RAMO_NENHUM));
 
   return (
     <div className="theme-convertscale min-h-screen bg-[#0a0812]">
@@ -280,30 +414,28 @@ export function AdminDashboard({
             </h1>
             <p className="mt-1 text-sm text-white/55">
               {leads.length} lead(s) ·{" "}
-              {counts.fechado > 0
-                ? `${counts.fechado} fechado(s) ✅`
-                : "nenhum fechado ainda"}
+              {fechados > 0 ? `${fechados} fechado(s) ✅` : "nenhum fechado ainda"}
             </p>
           </div>
           <div className="flex items-center gap-2">
-          <Link
-            href="/admin/relatorio"
-            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/75 transition-colors hover:text-white"
-          >
-            <BarChart3 className="h-4 w-4" aria-hidden="true" />
-            Relatório
-          </Link>
-          <button
-            type="button"
-            onClick={async () => {
-              await fetch("/api/admin/logout", { method: "POST" });
-              router.refresh();
-            }}
-            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/75 transition-colors hover:text-white"
-          >
-            <LogOut className="h-4 w-4" aria-hidden="true" />
-            Sair
-          </button>
+            <Link
+              href="/admin/relatorio"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/75 transition-colors hover:text-white"
+            >
+              <BarChart3 className="h-4 w-4" aria-hidden="true" />
+              Relatório
+            </Link>
+            <button
+              type="button"
+              onClick={async () => {
+                await fetch("/api/admin/logout", { method: "POST" });
+                router.refresh();
+              }}
+              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/75 transition-colors hover:text-white"
+            >
+              <LogOut className="h-4 w-4" aria-hidden="true" />
+              Sair
+            </button>
           </div>
         </header>
 
@@ -343,64 +475,46 @@ export function AdminDashboard({
           </p>
         ) : null}
 
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
-          {(LEAD_STATUSES).map((s) => (
-            <div
-              key={s}
-              className="cl-card rounded-2xl px-4 py-3 text-center"
-            >
-              <p className="text-2xl font-bold text-white">{counts[s]}</p>
-              <p className="mt-0.5 text-xs text-white/50">{STATUS_LABELS[s]}</p>
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {statuses.map((s) => (
+            <div key={s.id} className="cl-card rounded-2xl px-4 py-3 text-center">
+              <p className="text-2xl font-bold text-white">{counts.get(s.id) ?? 0}</p>
+              <p className="mt-0.5 truncate text-xs text-white/50">{s.nome}</p>
             </div>
           ))}
         </div>
 
-        <section className="cl-card mt-6 rounded-3xl p-5">
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-white/60">
-            <Package className="h-4 w-4" aria-hidden="true" />
-            Produtos ({produtos.length})
-          </h2>
-          <form onSubmit={addProduto} className="mt-3 flex gap-3">
-            <input
-              value={produtoNome}
-              onChange={(e) => setProdutoNome(e.target.value)}
-              placeholder="Novo produto (ex.: Recanto das Oliveiras, CustomMyLanding)"
-              maxLength={80}
-              className="w-full flex-1 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-white placeholder:text-white/35 outline-none transition-colors focus:border-cyan-400/60"
-            />
-            <button
-              type="submit"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-violet-700"
-            >
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              Adicionar
-            </button>
-          </form>
-          {produtoError ? (
-            <p className="mt-3 rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-300">
-              {produtoError}
-            </p>
-          ) : null}
-          {produtos.length > 0 ? (
-            <ul className="mt-3 flex flex-wrap gap-2">
-              {produtos.map((p) => (
-                <li
-                  key={p.id}
-                >
-                  <button
-                    type="button"
-                    onClick={() => setEditingProduto(p)}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-sm text-white/85 transition-colors hover:border-cyan-400/50 hover:text-white"
-                    aria-label={`Editar produto ${p.nome}`}
-                  >
-                    {p.nome}
-                    <Pencil className="h-3 w-3 text-white/40" aria-hidden="true" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </section>
+        <div className="mt-6 space-y-6">
+          <CadastroSection
+            title="Situações"
+            icon={<ListChecks className="h-4 w-4" aria-hidden="true" />}
+            items={statuses}
+            placeholder="Nova situação (ex.: Reunião marcada)"
+            maxLength={40}
+            error={cadError.status}
+            onAdd={(n) => addCad("status", n)}
+            onEdit={(item) => setEditing({ kind: "status", item })}
+          />
+          <CadastroSection
+            title="Ramos de atividade"
+            icon={<Tag className="h-4 w-4" aria-hidden="true" />}
+            items={ramos}
+            placeholder="Novo ramo (ex.: Academia)"
+            maxLength={40}
+            error={cadError.ramo}
+            onAdd={(n) => addCad("ramo", n)}
+            onEdit={(item) => setEditing({ kind: "ramo", item })}
+          />
+          <CadastroSection
+            title="Produtos"
+            icon={<Package className="h-4 w-4" aria-hidden="true" />}
+            items={produtos}
+            placeholder="Novo produto (ex.: Recanto das Oliveiras, CustomMyLanding)"
+            error={cadError.produto}
+            onAdd={(n) => addCad("produto", n)}
+            onEdit={(item) => setEditing({ kind: "produto", item })}
+          />
+        </div>
 
         <section className="mt-8 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -430,10 +544,26 @@ export function AdminDashboard({
               </button>
 
               <select
+                value={ramoFilter}
+                onChange={(e) => setRamoFilter(e.target.value)}
+                aria-label="Filtrar por ramo de atividade"
+                className={SELECT}
+              >
+                <option value="todos" className="bg-[#14102a]">
+                  Todos os ramos
+                </option>
+                {ramos.map((r) => (
+                  <option key={r.id} value={r.id} className="bg-[#14102a]">
+                    {r.nome}
+                  </option>
+                ))}
+              </select>
+
+              <select
                 value={produtoFilter}
                 onChange={(e) => setProdutoFilter(e.target.value)}
                 aria-label="Filtrar por produto"
-                className="appearance-none rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-cyan-400/60"
+                className={SELECT}
               >
                 <option value="todos" className="bg-[#14102a]">
                   Todos os produtos
@@ -449,22 +579,21 @@ export function AdminDashboard({
               </select>
 
               <select
-              value={filter}
-              onChange={(e) =>
-                setFilter(e.target.value as LeadStatus | "todos")
-              }
-              className="appearance-none rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-cyan-400/60"
-            >
-              <option value="todos" className="bg-[#14102a]">
-                Todas as situações
-              </option>
-              {LEAD_STATUSES.map((s) => (
-                <option key={s} value={s} className="bg-[#14102a]">
-                  {STATUS_LABELS[s]}
+                value={filter}
+                onChange={(e) => setFilter(e.target.value as LeadStatus | "todos")}
+                aria-label="Filtrar por situação"
+                className={SELECT}
+              >
+                <option value="todos" className="bg-[#14102a]">
+                  Todas as situações
                 </option>
-              ))}
-            </select>
-          </div>
+                {statuses.map((s) => (
+                  <option key={s.id} value={s.id} className="bg-[#14102a]">
+                    {s.nome}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {visibleLeads.length === 0 ? (
@@ -496,9 +625,9 @@ export function AdminDashboard({
                   ) : null}
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <a
-                    href={waLink(lead.whatsapp, `Olá! Vi que você se interessou por uma landing page no ConvertScale.`)}
+                    href={waLink(lead.whatsapp, textFor(lead))}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-medium text-emerald-300 transition-colors hover:bg-emerald-400/10"
@@ -506,6 +635,20 @@ export function AdminDashboard({
                     <MessageCircle className="h-4 w-4" aria-hidden="true" />
                     WhatsApp
                   </a>
+
+                  <select
+                    value={lead.ramo}
+                    onChange={(e) => setRamo(lead.id, e.target.value)}
+                    aria-label={`Ramo de atividade de ${lead.nome}`}
+                    title={`Ramo: ${ramoNomes.get(lead.ramo) ?? "Nenhum"}`}
+                    className={SELECT}
+                  >
+                    {ramos.map((r) => (
+                      <option key={r.id} value={r.id} className="bg-[#14102a]">
+                        {r.nome}
+                      </option>
+                    ))}
+                  </select>
 
                   <ProdutoMultiSelect
                     produtos={produtos}
@@ -515,16 +658,20 @@ export function AdminDashboard({
 
                   <select
                     value={lead.status}
-                    onChange={(e) =>
-                      setStatus(lead.id, e.target.value as LeadStatus)
-                    }
-                    className="appearance-none rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-cyan-400/60"
+                    onChange={(e) => setStatus(lead.id, e.target.value as LeadStatus)}
+                    aria-label={`Situação de ${lead.nome}`}
+                    className={SELECT}
                   >
-                    {(LEAD_STATUSES).map((s) => (
-                      <option key={s} value={s} className="bg-[#14102a]">
-                        {STATUS_LABELS[s]}
+                    {statuses.map((s) => (
+                      <option key={s.id} value={s.id} className="bg-[#14102a]">
+                        {s.nome}
                       </option>
                     ))}
+                    {statuses.some((s) => s.id === lead.status) ? null : (
+                      <option value={lead.status} className="bg-[#14102a]">
+                        {statusNome(statuses, lead.status)}
+                      </option>
+                    )}
                   </select>
 
                   <button
@@ -558,35 +705,28 @@ export function AdminDashboard({
         />
 
         <ProdutoEditModal
-          key={editingProduto?.id ?? "none"}
-          produto={editingProduto}
-          onClose={() => setEditingProduto(null)}
-          onSave={renameProduto}
-          onRequestDelete={(p) => {
-            setEditingProduto(null);
-            setToDelete({ kind: "produto", item: p });
+          key={editing ? `${editing.kind}:${editing.item.id}` : "none"}
+          produto={editing?.item ?? null}
+          title={editingTitle}
+          canDelete={!editingProtected}
+          onClose={() => setEditing(null)}
+          onSave={(id, nome) => renameCad(editing!.kind, id, nome)}
+          onRequestDelete={(item) => {
+            if (!editing) return;
+            setToDelete({ kind: editing.kind, item });
+            setEditing(null);
           }}
         />
 
         <ConfirmModal
           open={toDelete !== null}
-          title={
-            toDelete?.kind === "produto"
-              ? "Excluir produto?"
-              : "Excluir lead?"
-          }
-          description={
-            toDelete?.kind === "produto"
-              ? `"${toDelete.item.nome}" será removido e deixará de constar em todos os prospects que o tinham. Essa ação não pode ser desfeita.`
-              : toDelete
-                ? `"${toDelete.item.nome}" será removido do cadastro, junto com seus produtos de interesse. Essa ação não pode ser desfeita.`
-                : ""
-          }
+          title={deleteInfo.title}
+          description={deleteInfo.description}
           onClose={() => setToDelete(null)}
           onConfirm={async () => {
             if (!toDelete) return;
-            if (toDelete.kind === "produto") await removeProduto(toDelete.item);
-            else await removeLead(toDelete.item.id);
+            if (toDelete.kind === "lead") await removeLead((toDelete.item as Lead).id);
+            else await removeCad(toDelete.kind, toDelete.item as Cad);
             setToDelete(null);
           }}
         />

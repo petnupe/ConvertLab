@@ -9,7 +9,13 @@ import {
   type Lead,
   type LeadStatus,
   type Produto,
+  type Ramo,
+  type Status,
   type StatusChange,
+  DEFAULT_RAMOS,
+  DEFAULT_STATUSES,
+  INITIAL_STATUS,
+  RAMO_NENHUM,
 } from "@/lib/lead";
 
 /** Cria as tabelas de produtos (idempotente), uma vez por processo. */
@@ -27,6 +33,29 @@ export function ensureSchema(): Promise<void> {
       produto_id TEXT NOT NULL REFERENCES produtos(id) ON DELETE CASCADE,
       PRIMARY KEY (lead_id, produto_id)
     )`;
+    await sql`CREATE TABLE IF NOT EXISTS ramos (
+      id TEXT PRIMARY KEY,
+      nome TEXT NOT NULL,
+      ordem INT NOT NULL,
+      criado TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`;
+    await sql`CREATE UNIQUE INDEX IF NOT EXISTS ramos_nome_uq ON ramos (LOWER(nome))`;
+    for (const [i, r] of DEFAULT_RAMOS.entries()) {
+      await sql`INSERT INTO ramos (id, nome, ordem)
+        VALUES (${r.id}, ${r.nome}, ${i + 1}) ON CONFLICT DO NOTHING`;
+    }
+    await sql`ALTER TABLE leads ADD COLUMN IF NOT EXISTS ramo_id TEXT NOT NULL DEFAULT 'nenhum'`;
+    await sql`CREATE TABLE IF NOT EXISTS lead_status (
+      id TEXT PRIMARY KEY,
+      nome TEXT NOT NULL,
+      ordem INT NOT NULL,
+      criado TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`;
+    await sql`CREATE UNIQUE INDEX IF NOT EXISTS lead_status_nome_uq ON lead_status (LOWER(nome))`;
+    for (const [i, st] of DEFAULT_STATUSES.entries()) {
+      await sql`INSERT INTO lead_status (id, nome, ordem)
+        VALUES (${st.id}, ${st.nome}, ${i + 1}) ON CONFLICT DO NOTHING`;
+    }
     await sql`CREATE TABLE IF NOT EXISTS lead_status_hist (
       id TEXT PRIMARY KEY,
       lead_id TEXT NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
@@ -49,7 +78,7 @@ export function ensureSchema(): Promise<void> {
 export async function listLeads(): Promise<Lead[]> {
   await ensureSchema();
   const { rows } = await sql`
-    SELECT l.id, l.nome, l.whatsapp, l.status, l.criado,
+    SELECT l.id, l.nome, l.whatsapp, l.status, l.criado, l.ramo_id AS ramo,
       COALESCE(
         ARRAY_AGG(lp.produto_id) FILTER (WHERE lp.produto_id IS NOT NULL),
         '{}'
@@ -75,6 +104,7 @@ function mapToLead(row: Record<string, unknown>): Lead {
     status: String(row.status) as LeadStatus,
     criado,
     produtos: Array.isArray(row.produtos) ? row.produtos.map(String) : [],
+    ramo: row.ramo ? String(row.ramo) : RAMO_NENHUM,
   };
 }
 
@@ -86,7 +116,7 @@ export async function addLead(input: {
   const id = randomUUID();
   const nome = input.nome.trim();
   const whatsapp = normalizeWhatsapp(input.whatsapp);
-  const status = input.status ?? "novo";
+  const status = input.status ?? INITIAL_STATUS;
   await ensureSchema();
   await sql`INSERT INTO leads (id, nome, whatsapp, status, criado)
     VALUES (${id}, ${nome}, ${whatsapp}, ${status}, NOW())
@@ -100,6 +130,7 @@ export async function addLead(input: {
     status,
     criado: new Date().toISOString(),
     produtos: [],
+    ramo: RAMO_NENHUM,
   };
 }
 
@@ -113,7 +144,7 @@ export async function updateLeadStatus(
   const anterior = String(prev[0].status);
   const { rows } = await sql`UPDATE leads SET status = ${status}
     WHERE id = ${id}
-    RETURNING id, nome, whatsapp, status, criado`;
+    RETURNING id, nome, whatsapp, status, criado, ramo_id AS ramo`;
   if (rows.length === 0) return null;
   if (anterior !== status) {
     await sql`INSERT INTO lead_status_hist (id, lead_id, de, para, em)
@@ -228,4 +259,113 @@ export async function listStatusHistory(): Promise<StatusChange[]> {
     em:
       r.em instanceof Date ? r.em.toISOString() : new Date(String(r.em)).toISOString(),
   }));
+}
+
+/* ───────────── Cadastro de situações ───────────── */
+
+export async function listStatus(): Promise<Status[]> {
+  await ensureSchema();
+  const { rows } = await sql`SELECT id, nome FROM lead_status ORDER BY ordem ASC, LOWER(nome) ASC`;
+  return rows.map((r) => ({ id: String(r.id), nome: String(r.nome) }));
+}
+
+export async function statusExists(id: string): Promise<boolean> {
+  await ensureSchema();
+  const { rows } = await sql`SELECT 1 FROM lead_status WHERE id = ${id}`;
+  return rows.length > 0;
+}
+
+/** Retorna null se já existir uma situação com o mesmo nome (sem diferenciar maiúsculas). */
+export async function addStatus(nome: string): Promise<Status | null> {
+  await ensureSchema();
+  const id = randomUUID();
+  const clean = nome.trim();
+  const { rowCount } = await sql`INSERT INTO lead_status (id, nome, ordem)
+    VALUES (${id}, ${clean}, (SELECT COALESCE(MAX(ordem), 0) + 1 FROM lead_status))
+    ON CONFLICT DO NOTHING`;
+  return (rowCount ?? 0) > 0 ? { id, nome: clean } : null;
+}
+
+export async function renameStatus(
+  id: string,
+  nome: string,
+): Promise<Status | "duplicado" | null> {
+  await ensureSchema();
+  const clean = nome.trim();
+  const { rows: found } = await sql`SELECT id FROM lead_status WHERE id = ${id}`;
+  if (found.length === 0) return null;
+  const { rows: dup } = await sql`SELECT id FROM lead_status
+    WHERE LOWER(nome) = LOWER(${clean}) AND id <> ${id}`;
+  if (dup.length > 0) return "duplicado";
+  await sql`UPDATE lead_status SET nome = ${clean} WHERE id = ${id}`;
+  return { id, nome: clean };
+}
+
+/** "protegida": situação inicial; "em_uso": há leads nela. Só exclui situação sem leads. */
+export async function removeStatus(
+  id: string,
+): Promise<"ok" | "naoencontrada" | "protegida" | "em_uso"> {
+  await ensureSchema();
+  if (id === INITIAL_STATUS) return "protegida";
+  const { rows: uso } = await sql`SELECT COUNT(*)::int AS n FROM leads WHERE status = ${id}`;
+  if (Number(uso[0].n) > 0) return "em_uso";
+  const { rowCount } = await sql`DELETE FROM lead_status WHERE id = ${id}`;
+  return (rowCount ?? 0) > 0 ? "ok" : "naoencontrada";
+}
+
+/* ───────────── Ramos de atividade ───────────── */
+
+export async function listRamos(): Promise<Ramo[]> {
+  await ensureSchema();
+  const { rows } = await sql`SELECT id, nome FROM ramos ORDER BY ordem ASC, LOWER(nome) ASC`;
+  return rows.map((r) => ({ id: String(r.id), nome: String(r.nome) }));
+}
+
+export async function ramoExists(id: string): Promise<boolean> {
+  await ensureSchema();
+  const { rows } = await sql`SELECT 1 FROM ramos WHERE id = ${id}`;
+  return rows.length > 0;
+}
+
+/** Retorna null se já existir um ramo com o mesmo nome (sem diferenciar maiúsculas). */
+export async function addRamo(nome: string): Promise<Ramo | null> {
+  await ensureSchema();
+  const id = randomUUID();
+  const clean = nome.trim();
+  const { rowCount } = await sql`INSERT INTO ramos (id, nome, ordem)
+    VALUES (${id}, ${clean}, (SELECT COALESCE(MAX(ordem), 0) + 1 FROM ramos))
+    ON CONFLICT DO NOTHING`;
+  return (rowCount ?? 0) > 0 ? { id, nome: clean } : null;
+}
+
+export async function renameRamo(
+  id: string,
+  nome: string,
+): Promise<Ramo | "duplicado" | null> {
+  await ensureSchema();
+  const clean = nome.trim();
+  const { rows: found } = await sql`SELECT id FROM ramos WHERE id = ${id}`;
+  if (found.length === 0) return null;
+  const { rows: dup } = await sql`SELECT id FROM ramos
+    WHERE LOWER(nome) = LOWER(${clean}) AND id <> ${id}`;
+  if (dup.length > 0) return "duplicado";
+  await sql`UPDATE ramos SET nome = ${clean} WHERE id = ${id}`;
+  return { id, nome: clean };
+}
+
+/** Exclui o ramo; os leads dele voltam para "Nenhum". O ramo "Nenhum" é protegido. */
+export async function removeRamo(
+  id: string,
+): Promise<"ok" | "naoencontrado" | "protegido"> {
+  await ensureSchema();
+  if (id === RAMO_NENHUM) return "protegido";
+  await sql`UPDATE leads SET ramo_id = ${RAMO_NENHUM} WHERE ramo_id = ${id}`;
+  const { rowCount } = await sql`DELETE FROM ramos WHERE id = ${id}`;
+  return (rowCount ?? 0) > 0 ? "ok" : "naoencontrado";
+}
+
+export async function setLeadRamo(leadId: string, ramoId: string): Promise<boolean> {
+  await ensureSchema();
+  const { rowCount } = await sql`UPDATE leads SET ramo_id = ${ramoId} WHERE id = ${leadId}`;
+  return (rowCount ?? 0) > 0;
 }

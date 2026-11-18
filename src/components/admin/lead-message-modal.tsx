@@ -10,11 +10,8 @@ interface Props {
   onSave: (text: string) => void;
 }
 
-const DEFAULT_MESSAGE =
-  "Olá, %%NOME%%! Vi o perfil do seu negócio e notei que dá pra vender mais. Quer que eu deixe sua página no ar em 24h com um exemplo pronto (convert-scale-sigma.vercel.app/pet)? Custo único de R$ 799,00, menos de R$ 2,20/dia — se paga com 1-2 agendamentos. Posso adaptar tudo com a marca de vocês. Topa?";
-
 export function LeadMessageModal({ open, value, onClose, onSave }: Props) {
-  const [text, setText] = useState(() => value || DEFAULT_MESSAGE);
+  const [text, setText] = useState(value);
 
   if (!open) return null;
 

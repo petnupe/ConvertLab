@@ -1,9 +1,45 @@
-export type LeadStatus =
-  | "novo"
-  | "contato"
-  | "orcamento"
-  | "fechado"
-  | "perdido";
+/** Id de uma Situação cadastrada (as 5 originais mantêm seus ids: novo, contato...). */
+export type LeadStatus = string;
+
+export interface Status {
+  id: string;
+  nome: string;
+}
+
+/** Situação inicial de todo lead novo; não pode ser excluída. */
+export const INITIAL_STATUS: LeadStatus = "novo";
+
+/** Situações originais, semeadas no banco na primeira execução. */
+export const DEFAULT_STATUSES: Status[] = [
+  { id: "novo", nome: "Novo" },
+  { id: "contato", nome: "Em contato" },
+  { id: "orcamento", nome: "Orçamento" },
+  { id: "fechado", nome: "Fechado" },
+  { id: "perdido", nome: "Perdido" },
+];
+
+/** Ramo de atividade do lead (Funerário, PetShop...). */
+export interface Ramo {
+  id: string;
+  nome: string;
+}
+
+/** Ramo padrão de todo lead; não pode ser excluído. */
+export const RAMO_NENHUM = "nenhum";
+
+/** Ramos iniciais, semeados no banco na primeira execução. */
+export const DEFAULT_RAMOS: Ramo[] = [
+  { id: "funerario", nome: "Funerário" },
+  { id: "petshop", nome: "PetShop" },
+  { id: "nenhum", nome: "Nenhum" },
+  { id: "roupas", nome: "Roupas" },
+  { id: "calcados", nome: "Calçados" },
+];
+
+/** Nome de uma situação pelo id (cobre situações já removidas do cadastro). */
+export function statusNome(statuses: Status[], id: LeadStatus): string {
+  return statuses.find((s) => s.id === id)?.nome ?? "Situação removida";
+}
 
 export interface Lead {
   id: string;
@@ -12,15 +48,8 @@ export interface Lead {
   status: LeadStatus;
   criado: string; // ISO
   produtos: string[]; // ids de Produto (um prospect pode ter N produtos)
+  ramo: string; // id do Ramo de atividade (1 por lead; "nenhum" por padrão)
 }
-
-export const STATUS_LABELS: Record<LeadStatus, string> = {
-  novo: "Novo",
-  contato: "Em contato",
-  orcamento: "Orçamento",
-  fechado: "Fechado",
-  perdido: "Perdido",
-};
 
 /** Uma troca de situação de um lead. `de` é null no registro inicial (entrada do lead). */
 export interface StatusChange {
@@ -36,14 +65,6 @@ export interface Produto {
   id: string;
   nome: string;
 }
-
-export const LEAD_STATUSES: LeadStatus[] = [
-  "novo",
-  "contato",
-  "orcamento",
-  "fechado",
-  "perdido",
-];
 
 /**
  * Normaliza um número brasileiro para o padrão E.164 (somente dígitos),

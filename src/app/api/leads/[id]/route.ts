@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { isAuthenticated } from "@/lib/session";
-import { removeLead, updateLeadDados, updateLeadStatus } from "@/lib/lead-store";
-import { LEAD_STATUSES, normalizeWhatsapp, type LeadStatus } from "@/lib/lead";
+import {
+  removeLead,
+  statusExists,
+  updateLeadDados,
+  updateLeadStatus,
+} from "@/lib/lead-store";
+import { normalizeWhatsapp } from "@/lib/lead";
 
 export const runtime = "nodejs";
-
-const STATUSES: LeadStatus[] = LEAD_STATUSES;
 
 async function guard(): Promise<boolean> {
   return isAuthenticated();
@@ -48,8 +51,8 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ lead: dados });
   }
 
-  const status = body.status as LeadStatus;
-  if (!STATUSES.includes(status)) {
+  const status = String(body.status ?? "");
+  if (!status || !(await statusExists(status))) {
     return NextResponse.json({ error: "Status inválido." }, { status: 400 });
   }
 

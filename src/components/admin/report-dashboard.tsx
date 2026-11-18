@@ -5,9 +5,10 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, BarChart3 } from "lucide-react";
 
 import {
-  LEAD_STATUSES,
-  STATUS_LABELS,
+  statusNome,
   type Lead,
+  type Ramo,
+  type Status,
   type StatusChange,
 } from "@/lib/lead";
 
@@ -73,14 +74,29 @@ interface Tip {
 }
 
 export function ReportDashboard({
-  history,
-  leads,
+  history: historyAll,
+  leads: leadsAll,
+  statuses,
+  ramos,
   now,
 }: {
   history: StatusChange[];
   leads: Lead[];
+  statuses: Status[];
+  ramos: Ramo[];
   now: string;
 }) {
+  const [ramoFilter, setRamoFilter] = useState<string>("todos");
+  const leads = useMemo(
+    () => (ramoFilter === "todos" ? leadsAll : leadsAll.filter((l) => l.ramo === ramoFilter)),
+    [leadsAll, ramoFilter],
+  );
+  const history = useMemo(() => {
+    if (ramoFilter === "todos") return historyAll;
+    const ids = new Set(leads.map((l) => l.id));
+    return historyAll.filter((h) => ids.has(h.leadId));
+  }, [historyAll, leads, ramoFilter]);
+
   const [period, setPeriod] = useState<(typeof PERIODS)[number]["value"]>("30");
   const [visibleRows, setVisibleRows] = useState(25);
   const [tip, setTip] = useState<Tip | null>(null);
@@ -94,9 +110,9 @@ export function ReportDashboard({
     const entradas = inPeriod.filter((h) => h.de === null);
 
     // por destino
-    const porDestino = LEAD_STATUSES.map((s) => ({
-      status: s,
-      count: changes.filter((c) => c.para === s).length,
+    const porDestino = statuses.map((s) => ({
+      status: s.id,
+      count: changes.filter((c) => c.para === s.id).length,
     }));
 
     // série temporal: diária, ou semanal se o intervalo passar de 60 dias
@@ -140,15 +156,15 @@ export function ReportDashboard({
       weekly,
       fechados: changes.filter((c) => c.para === "fechado").length,
     };
-  }, [history, period, today]);
+  }, [history, period, today, statuses]);
 
-  const atual = LEAD_STATUSES.map((s) => ({
-    status: s,
-    count: leads.filter((l) => l.status === s).length,
+  const atual = statuses.map((s) => ({
+    status: s.id,
+    count: leads.filter((l) => l.status === s.id).length,
   }));
   const totalLeads = leads.length;
   const taxa = totalLeads
-    ? Math.round((atual.find((a) => a.status === "fechado")!.count / totalLeads) * 100)
+    ? Math.round(((atual.find((a) => a.status === "fechado")?.count ?? 0) / totalLeads) * 100)
     : 0;
 
   const tableRows = useMemo(() => {
@@ -170,6 +186,24 @@ export function ReportDashboard({
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <select
+              value={ramoFilter}
+              onChange={(e) => {
+                setRamoFilter(e.target.value);
+                setVisibleRows(25);
+              }}
+              aria-label="Ramo de atividade"
+              className="appearance-none rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-cyan-400/60"
+            >
+              <option value="todos" className="bg-[#14102a]">
+                Todos os ramos
+              </option>
+              {ramos.map((r) => (
+                <option key={r.id} value={r.id} className="bg-[#14102a]">
+                  {r.nome}
+                </option>
+              ))}
+            </select>
             <select
               value={period}
               onChange={(e) => {
@@ -227,12 +261,12 @@ export function ReportDashboard({
 
         <div className="mt-6 grid gap-6 sm:grid-cols-2">
           <Card title="Situação atual dos leads">
-            <BarList rows={atual.map((a) => ({ label: STATUS_LABELS[a.status], value: a.count }))} />
+            <BarList rows={atual.map((a) => ({ label: statusNome(statuses, a.status), value: a.count }))} />
           </Card>
           <Card title="Para onde os leads foram (no período)">
             <BarList
               rows={data.porDestino.map((a) => ({
-                label: STATUS_LABELS[a.status],
+                label: statusNome(statuses, a.status),
                 value: a.count,
               }))}
             />
@@ -266,13 +300,13 @@ export function ReportDashboard({
                       <td className="whitespace-nowrap py-2">
                         {h.de ? (
                           <span className="inline-flex items-center gap-1.5">
-                            {STATUS_LABELS[h.de]}
+                            {statusNome(statuses, h.de)}
                             <ArrowRight className="h-3.5 w-3.5 text-white/40" aria-hidden="true" />
-                            {STATUS_LABELS[h.para]}
+                            {statusNome(statuses, h.para)}
                           </span>
                         ) : (
                           <span className="text-white/60">
-                            Entrada como {STATUS_LABELS[h.para]}
+                            Entrada como {statusNome(statuses, h.para)}
                           </span>
                         )}
                       </td>
