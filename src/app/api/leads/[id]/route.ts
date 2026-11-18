@@ -19,7 +19,13 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
   }
 
-  let body: { id?: string; status?: string; nome?: string; whatsapp?: string };
+  let body: {
+    id?: string;
+    status?: string;
+    nome?: string;
+    whatsapp?: string;
+    justificativa?: string;
+  };
   try {
     body = await request.json();
   } catch {
@@ -56,7 +62,12 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Status inválido." }, { status: 400 });
   }
 
-  const lead = await updateLeadStatus(id, status);
+  const justificativa = String(body.justificativa ?? "").trim();
+  if (justificativa.length > 500) {
+    return NextResponse.json({ error: "Justificativa muito longa (máx. 500)." }, { status: 400 });
+  }
+
+  const lead = await updateLeadStatus(id, status, justificativa);
   if (!lead) {
     return NextResponse.json({ error: "Lead não encontrado." }, { status: 404 });
   }

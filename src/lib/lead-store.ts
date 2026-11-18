@@ -70,6 +70,7 @@ export function ensureSchema(): Promise<void> {
       para TEXT NOT NULL,
       em TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`;
+    await sql`ALTER TABLE lead_status_hist ADD COLUMN IF NOT EXISTS justificativa TEXT NOT NULL DEFAULT ''`;
     await sql`CREATE INDEX IF NOT EXISTS lead_status_hist_em_idx ON lead_status_hist (em)`;
     // Leads anteriores ao histórico ganham um registro inicial (situação atual, data de criação).
     await sql`INSERT INTO lead_status_hist (id, lead_id, de, para, em)
@@ -144,6 +145,7 @@ export async function addLead(input: {
 export async function updateLeadStatus(
   id: string,
   status: LeadStatus,
+  justificativa = "",
 ): Promise<Lead | null> {
   await ensureSchema();
   const { rows: prev } = await sql`SELECT status FROM leads WHERE id = ${id}`;
@@ -154,8 +156,8 @@ export async function updateLeadStatus(
     RETURNING id, nome, whatsapp, status, criado, ramo_id AS ramo`;
   if (rows.length === 0) return null;
   if (anterior !== status) {
-    await sql`INSERT INTO lead_status_hist (id, lead_id, de, para, em)
-      VALUES (${randomUUID()}, ${id}, ${anterior}, ${status}, NOW())`;
+    await sql`INSERT INTO lead_status_hist (id, lead_id, de, para, em, justificativa)
+      VALUES (${randomUUID()}, ${id}, ${anterior}, ${status}, NOW(), ${justificativa})`;
   }
   return mapToLead(rows[0] as Record<string, unknown>);
 }
@@ -252,7 +254,7 @@ export async function setLeadProdutos(
 export async function listStatusHistory(): Promise<StatusChange[]> {
   await ensureSchema();
   const { rows } = await sql`
-    SELECT h.id, h.lead_id, l.nome AS lead_nome, h.de, h.para, h.em
+    SELECT h.id, h.lead_id, l.nome AS lead_nome, h.de, h.para, h.em, h.justificativa
     FROM lead_status_hist h
     JOIN leads l ON l.id = h.lead_id
     ORDER BY h.em DESC
@@ -265,6 +267,28 @@ export async function listStatusHistory(): Promise<StatusChange[]> {
     para: String(r.para) as LeadStatus,
     em:
       r.em instanceof Date ? r.em.toISOString() : new Date(String(r.em)).toISOString(),
+    justificativa: String(r.justificativa ?? ""),
+  }));
+}
+
+export async function listLeadHistory(leadId: string): Promise<StatusChange[]> {
+  await ensureSchema();
+  const { rows } = await sql`
+    SELECT h.id, h.lead_id, l.nome AS lead_nome, h.de, h.para, h.em, h.justificativa
+    FROM lead_status_hist h
+    JOIN leads l ON l.id = h.lead_id
+    WHERE h.lead_id = ${leadId}
+    ORDER BY h.em DESC
+    LIMIT 500`;
+  return rows.map((r) => ({
+    id: String(r.id),
+    leadId: String(r.lead_id),
+    leadNome: String(r.lead_nome),
+    de: r.de ? (String(r.de) as LeadStatus) : null,
+    para: String(r.para) as LeadStatus,
+    em:
+      r.em instanceof Date ? r.em.toISOString() : new Date(String(r.em)).toISOString(),
+    justificativa: String(r.justificativa ?? ""),
   }));
 }
 

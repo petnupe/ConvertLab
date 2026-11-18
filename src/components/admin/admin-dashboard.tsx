@@ -13,6 +13,7 @@ import {
   FileText,
   FileDown,
   Package,
+  History,
   Pencil,
   BarChart3,
   ListChecks,
@@ -24,6 +25,8 @@ import { ProdutoMultiSelect } from "@/components/admin/produto-multiselect";
 import { ConfirmModal } from "@/components/admin/confirm-modal";
 import { ProdutoEditModal } from "@/components/admin/produto-edit-modal";
 import { LeadEditModal } from "@/components/admin/lead-edit-modal";
+import { LeadHistoryModal } from "@/components/admin/lead-history-modal";
+import { StatusJustifyModal } from "@/components/admin/status-justify-modal";
 import { CadastroSection } from "@/components/admin/cadastro-section";
 
 import {
@@ -120,6 +123,8 @@ export function AdminDashboard({
     { kind: Kind | "lead" | "variavel"; item: Cad | Lead | Variavel } | null
   >(null);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
+  const [historyLead, setHistoryLead] = useState<Lead | null>(null);
+  const [pendingStatus, setPendingStatus] = useState<{ lead: Lead; status: LeadStatus } | null>(null);
   const [editing, setEditing] = useState<{ kind: Kind; item: Cad } | null>(null);
   const [cadError, setCadError] = useState<Record<Kind, string>>({
     produto: "",
@@ -292,12 +297,12 @@ export function AdminDashboard({
     }
   }
 
-  async function setStatus(id: string, status: LeadStatus) {
+  async function setStatus(id: string, status: LeadStatus, justificativa = "") {
     setError("");
     const res = await fetch("/api/leads/" + id, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status }),
+      body: JSON.stringify({ id, status, justificativa }),
     });
     if (!res.ok) {
       setError("Não foi possível atualizar a situação.");
@@ -736,7 +741,7 @@ export function AdminDashboard({
 
                   <select
                     value={lead.status}
-                    onChange={(e) => setStatus(lead.id, e.target.value as LeadStatus)}
+                    onChange={(e) => setPendingStatus({ lead, status: e.target.value as LeadStatus })}
                     aria-label={`Situação de ${lead.nome}`}
                     className={SELECT}
                   >
@@ -751,6 +756,16 @@ export function AdminDashboard({
                       </option>
                     )}
                   </select>
+
+                  <button
+                    type="button"
+                    onClick={() => setHistoryLead(lead)}
+                    className="rounded-xl p-2 text-white/40 transition-colors hover:bg-white/10 hover:text-white"
+                    aria-label={`Histórico de ${lead.nome}`}
+                    title="Histórico"
+                  >
+                    <History className="h-4 w-4" aria-hidden="true" />
+                  </button>
 
                   <button
                     type="button"
@@ -774,6 +789,26 @@ export function AdminDashboard({
             ))
           )}
         </section>
+
+        <StatusJustifyModal
+          key={pendingStatus ? `${pendingStatus.lead.id}:${pendingStatus.status}` : "none-just"}
+          pending={pendingStatus}
+          statuses={statuses}
+          onCancel={() => setPendingStatus(null)}
+          onConfirm={(texto) => {
+            if (!pendingStatus) return;
+            const { lead, status } = pendingStatus;
+            setPendingStatus(null);
+            void setStatus(lead.id, status, texto);
+          }}
+        />
+
+        <LeadHistoryModal
+          key={historyLead?.id ?? "none-hist"}
+          lead={historyLead}
+          statuses={statuses}
+          onClose={() => setHistoryLead(null)}
+        />
 
         <LeadEditModal
           key={editingLead?.id ?? "none"}

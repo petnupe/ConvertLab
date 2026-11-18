@@ -310,6 +310,11 @@ export function ReportDashboard({
                             Entrada como {statusNome(statuses, h.para)}
                           </span>
                         )}
+                        {h.justificativa ? (
+                          <p className="mt-0.5 max-w-xs whitespace-normal text-xs text-white/50">
+                            {h.justificativa}
+                          </p>
+                        ) : null}
                       </td>
                     </tr>
                   ))}

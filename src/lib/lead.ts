@@ -59,6 +59,7 @@ export interface StatusChange {
   de: LeadStatus | null;
   para: LeadStatus;
   em: string; // ISO
+  justificativa: string; // motivo informado na troca (pode ser vazio)
 }
 
 export interface Produto {
