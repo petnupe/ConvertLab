@@ -110,14 +110,18 @@ export function LeadEditModal({ lead, onClose, onSave }: Props) {
 
         <div className="mt-6 flex justify-end gap-2">
           <button
+            aria-label="Cancelar"
+            title="Cancelar"
             type="button"
             onClick={onClose}
             disabled={busy}
             className="rounded-xl px-4 py-2 text-sm font-medium text-white/60 transition-colors hover:text-white disabled:opacity-50"
           >
-            Cancelar
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
           <button
+            aria-label="Salvar"
+            title="Salvar"
             type="submit"
             disabled={busy}
             className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-violet-700 disabled:opacity-70"
@@ -127,7 +131,6 @@ export function LeadEditModal({ lead, onClose, onSave }: Props) {
             ) : (
               <Check className="h-4 w-4" aria-hidden="true" />
             )}
-            Salvar
           </button>
         </div>
       </form>

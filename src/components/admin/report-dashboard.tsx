@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, BarChart3 } from "lucide-react";
+import { ArrowLeft, ArrowRight, BarChart3, ChevronDown } from "lucide-react";
 
 import {
   statusNome,
@@ -220,11 +220,12 @@ export function ReportDashboard({
               ))}
             </select>
             <Link
+              aria-label="Voltar para os leads"
+              title="Voltar para os leads"
               href="/admin"
               className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/75 transition-colors hover:text-white"
             >
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-              Leads
             </Link>
           </div>
         </header>
@@ -316,11 +317,13 @@ export function ReportDashboard({
               </table>
               {visibleRows < tableRows.length ? (
                 <button
+                  aria-label="Ver mais"
+                  title="Ver mais"
                   type="button"
                   onClick={() => setVisibleRows((n) => n + 50)}
                   className="mt-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/75 transition-colors hover:text-white"
                 >
-                  Ver mais
+                  <ChevronDown className="h-4 w-4" aria-hidden="true" />
                 </button>
               ) : null}
             </div>

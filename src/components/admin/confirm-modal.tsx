@@ -75,15 +75,19 @@ export function ConfirmModal({
 
         <div className="mt-6 flex justify-end gap-2">
           <button
+            aria-label="Cancelar"
+            title="Cancelar"
             type="button"
             onClick={onClose}
             disabled={busy}
             autoFocus
             className="rounded-xl px-4 py-2 text-sm font-medium text-white/60 transition-colors hover:text-white disabled:opacity-50"
           >
-            Cancelar
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
           <button
+            aria-label={confirmLabel}
+            title={confirmLabel}
             type="button"
             onClick={confirm}
             disabled={busy}
@@ -94,7 +98,6 @@ export function ConfirmModal({
             ) : (
               <Trash2 className="h-4 w-4" aria-hidden="true" />
             )}
-            {confirmLabel}
           </button>
         </div>
       </div>

@@ -64,12 +64,13 @@ export function CadastroSection({
           className="w-full flex-1 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-white placeholder:text-white/35 outline-none transition-colors focus:border-cyan-400/60"
         />
         <button
+          aria-label="Adicionar"
+          title="Adicionar"
           type="submit"
           disabled={busy}
           className="inline-flex items-center justify-center gap-2 rounded-2xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-violet-700 disabled:opacity-70"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
-          Adicionar
         </button>
       </form>
       {message ? (

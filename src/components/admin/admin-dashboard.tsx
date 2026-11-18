@@ -419,13 +419,16 @@ export function AdminDashboard({
           </div>
           <div className="flex items-center gap-2">
             <Link
+              aria-label="Relatório"
+              title="Relatório"
               href="/admin/relatorio"
               className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/75 transition-colors hover:text-white"
             >
               <BarChart3 className="h-4 w-4" aria-hidden="true" />
-              Relatório
             </Link>
             <button
+              aria-label="Sair"
+              title="Sair"
               type="button"
               onClick={async () => {
                 await fetch("/api/admin/logout", { method: "POST" });
@@ -434,7 +437,6 @@ export function AdminDashboard({
               className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/75 transition-colors hover:text-white"
             >
               <LogOut className="h-4 w-4" aria-hidden="true" />
-              Sair
             </button>
           </div>
         </header>
@@ -457,6 +459,8 @@ export function AdminDashboard({
             className="w-full rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-white placeholder:text-white/35 outline-none transition-colors focus:border-cyan-400/60 sm:w-56"
           />
           <button
+            aria-label="Adicionar lead"
+            title="Adicionar lead"
             type="submit"
             disabled={saving}
             className="inline-flex items-center justify-center gap-2 rounded-2xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_40px_-12px_rgba(124,58,237,0.9)] transition-colors hover:bg-violet-700 disabled:opacity-70"
@@ -466,7 +470,6 @@ export function AdminDashboard({
             ) : (
               <Plus className="h-4 w-4" aria-hidden="true" />
             )}
-            Adicionar
           </button>
         </form>
         {error ? (
@@ -525,22 +528,25 @@ export function AdminDashboard({
 
             <div className="flex flex-wrap items-center gap-2">
               <button
+                aria-label="Mensagem do WhatsApp"
+                title="Mensagem do WhatsApp"
                 type="button"
                 onClick={() => setMessageOpen(true)}
                 className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-medium text-white/75 transition-colors hover:text-white"
               >
                 <FileText className="h-4 w-4" aria-hidden="true" />
-                Mensagem
               </button>
 
               <button
+                aria-label="Gerar .txt com os links"
+                title="Gerar .txt com os links"
                 type="button"
                 onClick={downloadTxt}
                 disabled={visibleLeads.length === 0}
                 className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-violet-700 disabled:opacity-50"
               >
                 <FileDown className="h-4 w-4" aria-hidden="true" />
-                Gerar .txt ({visibleLeads.length})
+                {visibleLeads.length}
               </button>
 
               <select
@@ -627,13 +633,14 @@ export function AdminDashboard({
 
                 <div className="flex flex-wrap items-center gap-2">
                   <a
+                    aria-label={`WhatsApp de ${lead.nome}`}
+                    title={`WhatsApp de ${lead.nome}`}
                     href={waLink(lead.whatsapp, textFor(lead))}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-medium text-emerald-300 transition-colors hover:bg-emerald-400/10"
                   >
                     <MessageCircle className="h-4 w-4" aria-hidden="true" />
-                    WhatsApp
                   </a>
 
                   <select

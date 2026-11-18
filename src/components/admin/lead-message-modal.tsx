@@ -50,19 +50,22 @@ export function LeadMessageModal({ open, value, onClose, onSave }: Props) {
 
         <div className="mt-5 flex justify-end gap-2">
           <button
+            aria-label="Cancelar"
+            title="Cancelar"
             type="button"
             onClick={onClose}
             className="rounded-xl px-4 py-2 text-sm font-medium text-white/60 transition-colors hover:text-white"
           >
-            Cancelar
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
           <button
+            aria-label="Salvar"
+            title="Salvar"
             type="button"
             onClick={() => onSave(text)}
             className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-violet-700"
           >
             <Check className="h-4 w-4" aria-hidden="true" />
-            Salvar
           </button>
         </div>
       </div>

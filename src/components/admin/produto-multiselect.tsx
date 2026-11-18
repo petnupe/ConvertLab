@@ -69,12 +69,16 @@ export function ProdutoMultiSelect({ produtos, selected, onChange }: Props) {
         ref={btnRef}
         type="button"
         onClick={toggleOpen}
+        aria-label={selected.length === 0 ? "Produtos" : `Produtos (${selected.length})`}
+        title="Produtos"
         aria-haspopup="listbox"
         aria-expanded={open}
         className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-white outline-none transition-colors hover:border-white/25 focus:border-cyan-400/60"
       >
         <Package className="h-4 w-4 text-white/50" aria-hidden="true" />
-        {selected.length === 0 ? "Produtos" : `Produtos (${selected.length})`}
+        {selected.length > 0 ? (
+          <span className="text-xs font-semibold tabular-nums">{selected.length}</span>
+        ) : null}
         <ChevronDown className="h-4 w-4 text-white/50" aria-hidden="true" />
       </button>
 
