@@ -39,6 +39,7 @@ import {
   type Ramo,
   type Status,
 } from "@/lib/lead";
+import { renderMessage, type Variavel } from "@/lib/mensagem";
 
 type Kind = "produto" | "status" | "ramo";
 interface Cad {
@@ -97,11 +98,13 @@ export function AdminDashboard({
   produtos: produtosProp,
   statuses: statusesProp,
   ramos: ramosProp,
+  variaveis: variaveisProp,
 }: {
   leads: Lead[];
   produtos: Produto[];
   statuses: Status[];
   ramos: Ramo[];
+  variaveis: Variavel[];
 }) {
   const router = useRouter();
 
@@ -111,9 +114,10 @@ export function AdminDashboard({
   const [produtos, setProdutos] = useSynced(produtosProp);
   const [statuses, setStatuses] = useSynced(statusesProp);
   const [ramos, setRamos] = useSynced(ramosProp);
+  const [variaveis, setVariaveis] = useSynced(variaveisProp);
 
   const [toDelete, setToDelete] = useState<
-    { kind: Kind | "lead"; item: Cad | Lead } | null
+    { kind: Kind | "lead" | "variavel"; item: Cad | Lead | Variavel } | null
   >(null);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [editing, setEditing] = useState<{ kind: Kind; item: Cad } | null>(null);
@@ -135,7 +139,8 @@ export function AdminDashboard({
   const message = useSyncExternalStore(subscribeMessage, readMessage, () => "");
 
   /** Texto enviado pelo botão WhatsApp: o da "Mensagem" (com %%NOME%%); vazio = sem texto. */
-  const textFor = (lead: Lead) => message.replaceAll("%%NOME%%", lead.nome);
+  const textFor = (lead: Lead) =>
+    renderMessage(message, lead, { produtos, ramos, statuses, variaveis });
 
   const setList = (kind: Kind) =>
     kind === "produto" ? setProdutos : kind === "status" ? setStatuses : setRamos;
@@ -209,6 +214,51 @@ export function AdminDashboard({
     } else if (filter === item.id) {
       setFilter("todos");
     }
+    router.refresh();
+  }
+
+  /* ───────── variáveis da mensagem ───────── */
+
+  async function addVariavel(nome: string, valor: string): Promise<string | null> {
+    const res = await fetch("/api/variaveis", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nome, valor }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return data.error ?? "Erro ao salvar variável.";
+    if (data.variavel) {
+      setVariaveis((prev) =>
+        [...prev, data.variavel as Variavel].sort((a, b) => a.nome.localeCompare(b.nome)),
+      );
+    }
+    router.refresh();
+    return null;
+  }
+
+  async function updateVariavel(id: string, valor: string): Promise<string | null> {
+    const res = await fetch(`/api/variaveis/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ valor }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      return data.error ?? "Erro ao salvar variável.";
+    }
+    const v = valor.trim();
+    setVariaveis((prev) => prev.map((x) => (x.id === id ? { ...x, valor: v } : x)));
+    router.refresh();
+    return null;
+  }
+
+  async function removeVariavel(v: Variavel) {
+    const res = await fetch(`/api/variaveis/${v.id}`, { method: "DELETE" });
+    if (!res.ok) {
+      setError("Não foi possível excluir a variável.");
+      return;
+    }
+    setVariaveis((prev) => prev.filter((x) => x.id !== v.id));
     router.refresh();
   }
 
@@ -373,6 +423,13 @@ export function AdminDashboard({
       return {
         title: "Excluir lead?",
         description: `"${(toDelete.item as Lead).nome}" será removido do cadastro, junto com seus produtos de interesse e histórico. Essa ação não pode ser desfeita.`,
+      };
+    }
+    if (toDelete.kind === "variavel") {
+      const v = toDelete.item as Variavel;
+      return {
+        title: "Excluir variável?",
+        description: `%%${v.nome}%% será removida. Mensagens que a usam passam a exibir o código sem valor. Essa ação não pode ser desfeita.`,
       };
     }
     const nome = (toDelete.item as Cad).nome;
@@ -747,6 +804,7 @@ export function AdminDashboard({
           onConfirm={async () => {
             if (!toDelete) return;
             if (toDelete.kind === "lead") await removeLead((toDelete.item as Lead).id);
+            else if (toDelete.kind === "variavel") await removeVariavel(toDelete.item as Variavel);
             else await removeCad(toDelete.kind, toDelete.item as Cad);
             setToDelete(null);
           }}
@@ -758,6 +816,24 @@ export function AdminDashboard({
           value={message}
           onClose={() => setMessageOpen(false)}
           onSave={saveMessage}
+          variaveis={variaveis}
+          onAddVar={addVariavel}
+          onUpdateVar={updateVariavel}
+          onDeleteVar={(v) => setToDelete({ kind: "variavel", item: v })}
+          preview={
+            leads.length > 0
+              ? {
+                  nome: (visibleLeads[0] ?? leads[0]).nome,
+                  render: (tpl) =>
+                    renderMessage(tpl, visibleLeads[0] ?? leads[0], {
+                      produtos,
+                      ramos,
+                      statuses,
+                      variaveis,
+                    }),
+                }
+              : null
+          }
         />
       </div>
     </div>

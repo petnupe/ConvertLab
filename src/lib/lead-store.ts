@@ -17,6 +17,7 @@ import {
   INITIAL_STATUS,
   RAMO_NENHUM,
 } from "@/lib/lead";
+import type { Variavel } from "@/lib/mensagem";
 
 /** Cria as tabelas de produtos (idempotente), uma vez por processo. */
 let schemaReady: Promise<void> | null = null;
@@ -45,6 +46,12 @@ export function ensureSchema(): Promise<void> {
         VALUES (${r.id}, ${r.nome}, ${i + 1}) ON CONFLICT DO NOTHING`;
     }
     await sql`ALTER TABLE leads ADD COLUMN IF NOT EXISTS ramo_id TEXT NOT NULL DEFAULT 'nenhum'`;
+    await sql`CREATE TABLE IF NOT EXISTS variaveis (
+      id TEXT PRIMARY KEY,
+      nome TEXT NOT NULL UNIQUE,
+      valor TEXT NOT NULL DEFAULT '',
+      criado TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`;
     await sql`CREATE TABLE IF NOT EXISTS lead_status (
       id TEXT PRIMARY KEY,
       nome TEXT NOT NULL,
@@ -367,5 +374,45 @@ export async function removeRamo(
 export async function setLeadRamo(leadId: string, ramoId: string): Promise<boolean> {
   await ensureSchema();
   const { rowCount } = await sql`UPDATE leads SET ramo_id = ${ramoId} WHERE id = ${leadId}`;
+  return (rowCount ?? 0) > 0;
+}
+
+/* ───────────── Variáveis da mensagem ───────────── */
+
+export async function listVariaveis(): Promise<Variavel[]> {
+  await ensureSchema();
+  const { rows } = await sql`SELECT id, nome, valor FROM variaveis ORDER BY nome ASC`;
+  return rows.map((r) => ({ id: String(r.id), nome: String(r.nome), valor: String(r.valor) }));
+}
+
+/** Retorna null se o nome já existir. */
+export async function addVariavel(nome: string, valor: string): Promise<Variavel | null> {
+  await ensureSchema();
+  const id = randomUUID();
+  const { rowCount } = await sql`INSERT INTO variaveis (id, nome, valor)
+    VALUES (${id}, ${nome}, ${valor}) ON CONFLICT DO NOTHING`;
+  return (rowCount ?? 0) > 0 ? { id, nome, valor } : null;
+}
+
+export async function updateVariavel(
+  id: string,
+  dados: { nome?: string; valor?: string },
+): Promise<Variavel | "duplicada" | null> {
+  await ensureSchema();
+  const { rows } = await sql`SELECT id, nome, valor FROM variaveis WHERE id = ${id}`;
+  if (rows.length === 0) return null;
+  const nome = dados.nome ?? String(rows[0].nome);
+  const valor = dados.valor ?? String(rows[0].valor);
+  if (nome !== String(rows[0].nome)) {
+    const { rows: dup } = await sql`SELECT id FROM variaveis WHERE nome = ${nome} AND id <> ${id}`;
+    if (dup.length > 0) return "duplicada";
+  }
+  await sql`UPDATE variaveis SET nome = ${nome}, valor = ${valor} WHERE id = ${id}`;
+  return { id, nome, valor };
+}
+
+export async function removeVariavel(id: string): Promise<boolean> {
+  await ensureSchema();
+  const { rowCount } = await sql`DELETE FROM variaveis WHERE id = ${id}`;
   return (rowCount ?? 0) > 0;
 }
