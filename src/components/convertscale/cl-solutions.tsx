@@ -8,7 +8,7 @@ import { solutions } from "@/data/catalog";
 
 export function ClSolutions() {
   const [featured, ...rest] = solutions;
-  const mediumSolutions = rest.filter((s) => ["tagarela", "messatia-lenita"].includes(s.slug));
+  const mediumSolutions = rest.filter((s) => ["pousou", "tagarela", "messatia-lenita"].includes(s.slug));
   const otherSolutions = rest.filter((s) => !mediumSolutions.includes(s));
 
   return (

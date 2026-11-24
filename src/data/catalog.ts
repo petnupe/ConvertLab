@@ -139,6 +139,16 @@ export const solutions: Solution[] = [
     href: "https://sites.cuidadosmeus.com.br/store/",
   },
   {
+    slug: "pousou",
+    name: "Pousou",
+    tag: "Página de vendas",
+    blurb:
+      "Página de vendas profissional com formulário, WhatsApp e painel de leads para negócios locais, com editor por blocos e teste grátis por 7 dias.",
+    image: "/solutions/pousou.webp",
+    imageAlt: "Página do Pousou: sua página no ar e captando contatos",
+    href: "https://sites.cuidadosmeus.com.br/custommylanding/",
+  },
+  {
     slug: "tagarela",
     name: "Tagarela",
     tag: "Comunicação acessível",
