@@ -132,6 +132,7 @@ export function AdminDashboard({
     ramo: "",
   });
 
+  const [busca, setBusca] = useState("");
   const [produtoFilter, setProdutoFilter] = useState<string>("todos");
   const [ramoFilter, setRamoFilter] = useState<string>("todos");
   const [filter, setFilter] = useState<LeadStatus | "todos">("todos");
@@ -414,8 +415,16 @@ export function AdminDashboard({
   const ramoNomes = new Map(ramos.map((r) => [r.id, r.nome]));
   const fechados = counts.get("fechado") ?? 0;
 
+  const norm = (s: string) =>
+    s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+  const termo = norm(busca.trim());
+  const termoDigits = busca.replace(/\D/g, "");
+
   const visibleLeads = leads.filter(
     (l) =>
+      (termo === "" ||
+        norm(l.nome).includes(termo) ||
+        (termoDigits !== "" && l.whatsapp.replace(/\D/g, "").includes(termoDigits))) &&
       (filter === "todos" || l.status === filter) &&
       (ramoFilter === "todos" || l.ramo === ramoFilter) &&
       (produtoFilter === "todos" ||
@@ -624,6 +633,15 @@ export function AdminDashboard({
                 <FileDown className="h-4 w-4" aria-hidden="true" />
                 {visibleLeads.length}
               </button>
+
+              <input
+                type="search"
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                placeholder="Buscar nome ou telefone"
+                aria-label="Buscar lead por nome ou telefone"
+                className={`${SELECT} w-52 placeholder:text-white/35`}
+              />
 
               <select
                 value={ramoFilter}
